@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perspectiva Isométrica</title>
+<style>
+/* =============================================================
+   PERSPECTIVA ISOMÉTRICA — Aplicativo Educacional
+   Estilo: papel de desenho técnico, blueprint leve
+   Tema: fundo creme neutro, tinta azul prussiana, grafite
+   ============================================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #F2EFE7;   /* papel de desenho */
+  --bg2:       #E8E4D8;
+  --paper:     #FDFBF5;
+  --ink:       #1A2030;
+  --ink2:      #384558;
+  --ink3:      #6A7B8C;
+  --blue:      #1A4E82;
+  --blue2:     #2967A8;
+  --accent:    #C0392B;
+  --green:     #1A6B3A;
+  --amber:     #9A6200;
+  --border:    rgba(100,120,140,0.25);
+  --shadow:    0 2px 10px rgba(26,32,48,0.12);
+  --r:         6px;
+  --r2:        10px;
+}
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+/* ---- Cabeçalho ---- */
+#cabecalho {
+  background: var(--ink);
+  color: #fff;
+  padding: 0 20px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+#cabecalho .titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.titulo-ico {
+  width: 28px; height: 28px;
+  background: var(--blue2);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+#cabecalho .sep { flex: 1; }
+.hd-badge {
+  font-size: 0.7rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; gap: 6px;
+}
+.hd-badge strong { color: #7DD3FC; font-size: 0.9rem; }
+
+/* ---- Abas ---- */
+#abas {
+  background: var(--ink);
+  display: flex;
+  padding: 0 20px;
+  gap: 2px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.aba-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  padding: 9px 18px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.aba-btn:hover  { color: rgba(255,255,255,0.78); }
+.aba-btn.ativa  { color: #93C5FD; border-bottom-color: #93C5FD; }
+
+/* ---- Layout body ---- */
+#corpo {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#coluna-principal {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#coluna-lateral {
+  width: 256px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Páginas de aba ---- */
+.pagina { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+.pagina.ativa { display: flex; }
+
+/* ================================================================
+   ABA 1 — EXERCÍCIO
+   ================================================================ */
+#pag-exercicio {
+  overflow-y: auto;
+  padding: 16px;
+  gap: 14px;
+}
+
+/* Cabeçalho do exercício */
+.ex-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue2);
+  border-radius: var(--r2);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.ex-num {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.ex-info { flex: 1; }
+.ex-nome { font-size: 0.95rem; font-weight: 700; color: var(--ink); }
+.ex-desc { font-size: 0.73rem; color: var(--ink3); margin-top: 3px; line-height: 1.4; }
+.ex-dif {
+  font-size: 0.62rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--ink3);
+  white-space: nowrap;
+}
+
+/* Grade das 3 vistas */
+.vistas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+.vista-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.vista-topo {
+  background: var(--ink2);
+  color: rgba(255,255,255,0.75);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.vista-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.vista-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+canvas.vista { border: 1px solid #DDD7C8; border-radius: 3px; display: block; }
+
+/* Instruções */
+.instrucoes {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 14px 16px;
+  flex-shrink: 0;
+}
+.instrucoes h3 {
+  font-size: 0.63rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.instrucoes ol {
+  padding-left: 18px;
+  color: var(--ink2);
+  font-size: 0.8rem;
+  line-height: 2;
+}
+.dica {
+  margin-top: 10px;
+  background: #E8F0FB;
+  border-left: 3px solid var(--blue2);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 8px 12px;
+  font-size: 0.74rem;
+  color: var(--blue);
+  line-height: 1.5;
+}
+
+/* ================================================================
+   ABA 2 — ÁREA DE DESENHO
+   ================================================================ */
+#pag-desenho {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#barra-ferramentas {
+  background: var(--ink);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.fbtn {
+  font-family: 'Courier New', monospace;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 11px;
+  border-radius: var(--r);
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fbtn:hover  { background: rgba(255,255,255,0.16); color: #fff; }
+.fbtn.ativo  { background: var(--blue2); border-color: var(--blue2); color: #fff; }
+.fbtn.verde  { background: rgba(26,107,58,0.3); border-color: rgba(26,107,58,0.55); color: #86EFAC; }
+.fbtn.verde:hover { background: #15803D; border-color: #15803D; color: #fff; }
+.fbtn.ouro   { border-color: rgba(202,138,4,0.5); color: #FCD34D; }
+.fbtn.ouro:hover { background: var(--amber); color: #fff; }
+.fbtn.peri:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fsep { width: 1px; height: 18px; background: rgba(255,255,255,0.12); margin: 0 2px; flex-shrink: 0; }
+
+#area-iso {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: var(--paper);
+  min-height: 0;
+}
+#canvasIso {
+  display: block;
+  cursor: crosshair;
+  background: var(--paper);
+}
+
+#barra-status {
+  background: var(--ink);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 4px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.61rem;
+  color: rgba(255,255,255,0.45);
+  flex-shrink: 0;
+}
+.legenda-iso { display: flex; gap: 14px; }
+.leg { display: flex; align-items: center; gap: 5px; }
+.leg-ln { width: 15px; height: 2px; border-radius: 1px; }
+
+/* ================================================================
+   ABA 3 — CONTROLES
+   ================================================================ */
+#pag-controles {
+  overflow-y: auto;
+  padding: 16px;
+  gap: 12px;
+}
+.ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ctrl-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+.ctrl-card h3 {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Botões de ação */
+.abtn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 9px 12px; border-radius: var(--r);
+  border: 1.5px solid transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 0.74rem; font-weight: 700;
+  cursor: pointer; transition: all 0.16s;
+  margin-bottom: 7px;
+}
+.abtn:last-child { margin-bottom: 0; }
+.abtn-azul   { background: var(--blue);   color: #fff; border-color: var(--blue);  }
+.abtn-azul:hover   { background: var(--blue2); }
+.abtn-verde  { background: var(--green);  color: #fff; border-color: var(--green); }
+.abtn-verde:hover  { background: #15803D; }
+.abtn-ouro   { background: var(--amber);  color: #fff; border-color: var(--amber); }
+.abtn-ouro:hover   { background: #7A5000; }
+.abtn-cinza  { background: transparent; color: var(--ink2); border-color: rgba(100,120,140,0.35); }
+.abtn-cinza:hover  { background: var(--bg2); }
+.abtn-peri   { background: transparent; color: var(--accent); border-color: var(--accent); }
+.abtn-peri:hover   { background: var(--accent); color: #fff; }
+
+/* Indicadores */
+.ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ind-tile {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 10px 8px; text-align: center;
+}
+.ind-val {
+  font-size: 1.55rem; font-weight: 700;
+  color: var(--blue); line-height: 1.1;
+}
+.ind-val.verde { color: var(--green); }
+.ind-val.verm  { color: var(--accent); }
+.ind-val.ouro  { color: var(--amber); }
+.ind-label { font-size: 0.6rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 2px; }
+
+/* Resultado */
+.res-tabela { font-size: 0.72rem; width: 100%; }
+.res-linha {
+  display: flex; justify-content: space-between; padding: 4px 0;
+  border-bottom: 1px dashed var(--border); align-items: center;
+}
+.res-linha:last-child { border-bottom: none; }
+.res-linha .v { font-weight: 700; }
+.v-verde { color: var(--green); }
+.v-ouro  { color: var(--amber); }
+.v-verm  { color: var(--accent); }
+.v-azul  { color: var(--blue2); }
+
+/* Feedback */
+.feedback {
+  border-radius: var(--r); padding: 10px 12px;
+  font-size: 0.78rem; line-height: 1.5;
+  border-left: 3px solid var(--border);
+  background: var(--bg2); color: var(--ink3);
+}
+.feedback.ok   { border-color: var(--green); background: #E8F5EE; color: #145228; }
+.feedback.aviso{ border-color: var(--amber); background: #FEF9EC; color: #7A5000; }
+.feedback.erro { border-color: var(--accent);background: #FDECEC; color: #991B1B; }
+
+/* ================================================================
+   PAINEL LATERAL
+   ================================================================ */
+.lat-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.lat-topo {
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--ink2); color: rgba(255,255,255,0.6);
+  padding: 5px 10px;
+}
+.lat-corpo { padding: 10px 12px; }
+#canvasMini {
+  border: 1px solid #DDD7C8; border-radius: 3px;
+  background: var(--paper); display: block; margin: 0 auto;
+}
+.tag {
+  display: inline-flex; align-items: center;
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 8px; border-radius: 20px; margin: 2px;
+}
+.tag-basico       { background: var(--green); color: #fff; }
+.tag-intermediario{ background: var(--amber); color: #fff; }
+.tag-avancado     { background: var(--accent);color: #fff; }
+.tag-info         { background: var(--bg2); border: 1px solid var(--border); color: var(--ink3); }
+
+/* ================================================================
+   ANIMAÇÕES
+   ================================================================ */
+@keyframes entrar { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.entrar { animation: entrar 0.25s ease both; }
+
+@keyframes pulso-verde {
+  0%,100% { box-shadow: 0 0 0 0 rgba(26,107,58,0.3); }
+  50%      { box-shadow: 0 0 0 8px rgba(26,107,58,0); }
+}
+.pulso-ok { animation: pulso-verde 0.8s ease 2; }
+
+/* ================================================================
+   RESPONSIVO
+   ================================================================ */
+@media (max-width: 880px) {
+  #coluna-lateral { display: none; }
+  .vistas-grid { grid-template-columns: 1fr 1fr; }
+  .ctrl-grid   { grid-template-columns: 1fr; }
+}
+@media (max-width: 540px) {
+  .vistas-grid { grid-template-columns: 1fr; }
+  .aba-btn { padding: 9px 10px; font-size: 0.6rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================================================
+     CABEÇALHO
+=================================================== -->
+<div id="cabecalho">
+  <div class="titulo">
+    <div class="titulo-ico">&#9643;</div>
+    Perspectiva Isométrica
+  </div>
+  <div class="sep"></div>
+  <div class="hd-badge">Exercício&nbsp;<strong id="hd-ex">0</strong></div>
+  <div class="hd-badge">Pontuação&nbsp;<strong id="hd-pts">0</strong></div>
+</div>
+
+<!-- ABAS -->
+<div id="abas">
+  <button class="aba-btn ativa" data-aba="exercicio" onclick="ativarAba('exercicio')">&#9312; Exercício</button>
+  <button class="aba-btn"       data-aba="desenho"   onclick="ativarAba('desenho')">&#9313; Área de Desenho</button>
+  <button class="aba-btn"       data-aba="controles" onclick="ativarAba('controles')">&#9314; Controles</button>
+</div>
+
+<!-- ===================================================
+     CORPO
+=================================================== -->
+<div id="corpo">
+<div id="coluna-principal">
+
+  <!-- ============================================
+       ABA 1 — EXERCÍCIO
+  ============================================ -->
+  <div id="pag-exercicio" class="pagina ativa">
+
+    <div class="ex-card">
+      <span class="ex-num" id="ex-num">EX 001</span>
+      <div class="ex-info">
+        <div class="ex-nome" id="ex-nome">—</div>
+        <div class="ex-desc" id="ex-desc">Carregando…</div>
+      </div>
+      <span class="ex-dif" id="ex-dif">—</span>
+    </div>
+
+    <div class="vistas-grid">
+      <div class="vista-card">
+        <div class="vista-topo"><div class="vista-dot" style="background:#7DD3FC"></div>Vista Frontal</div>
+        <div class="vista-wrap"><canvas class="vista" id="vistaF" width="170" height="170"></canvas></div>
+      </div>
+      <div class="vista-card">
+        <div class="vista-topo"><div class="vista-dot" style="background:#86EFAC"></div>Vista Superior</div>
+        <div class="vista-wrap"><canvas class="vista" id="vistaS" width="170" height="170"></canvas></div>
+      </div>
+      <div class="vista-card">
+        <div class="vista-topo"><div class="vista-dot" style="background:#FCA5A5"></div>Vista Lateral Esq.</div>
+        <div class="vista-wrap"><canvas class="vista" id="vistaL" width="170" height="170"></canvas></div>
+      </div>
+    </div>
+
+    <div class="instrucoes">
+      <h3>&#128208; Como construir a perspectiva isométrica</h3>
+      <ol>
+        <li>Analise as três vistas ortográficas acima</li>
+        <li>Vá para a aba <strong>&#9313; Área de Desenho</strong></li>
+        <li><strong>1.º clique</strong> — define o ponto inicial da linha</li>
+        <li><strong>2.º clique</strong> — define o ponto final; linha é desenhada</li>
+        <li>O snap automático alinha ao vértice mais próximo da grade</li>
+        <li>Clique em <strong>Corrigir</strong> para verificar o resultado</li>
+      </ol>
+      <div class="dica">
+        &#128161; <strong>Dica:</strong> Na isometria todas as arestas seguem três direções:
+        <strong>vertical (90°)</strong>, <strong>diagonal direita (30°)</strong>
+        e <strong>diagonal esquerda (150°)</strong>.
+      </div>
+    </div>
+
+  </div><!-- /pag-exercicio -->
+
+  <!-- ============================================
+       ABA 2 — ÁREA DE DESENHO
+  ============================================ -->
+  <div id="pag-desenho" class="pagina">
+
+    <div id="barra-ferramentas">
+      <button class="fbtn ativo" id="fbtn-linha"  onclick="setFerramenta('linha')"  title="Desenhar linha [D]">&#9999; Linha</button>
+      <button class="fbtn"       id="fbtn-apagar" onclick="setFerramenta('apagar')" title="Apagar linha [E]">&#9003; Apagar</button>
+      <div class="fsep"></div>
+      <button class="fbtn" onclick="desfazer()"     title="Desfazer [Ctrl+Z]">&#8617; Desfazer</button>
+      <button class="fbtn peri" onclick="limpar()"  title="Limpar tudo">&#128465; Limpar</button>
+      <div class="fsep"></div>
+      <button class="fbtn ouro" onclick="verSolucao()">&#128065; Solução</button>
+      <button class="fbtn verde" onclick="corrigir()">&#10004; Corrigir</button>
+      <div class="fsep"></div>
+      <button class="fbtn" id="fbtn-snap" onclick="toggleSnap()" title="Snap à grade">&#129960; Snap ON</button>
+      <button class="fbtn" onclick="novoExercicio()">&#127922; Novo</button>
+    </div>
+
+    <div id="area-iso">
+      <canvas id="canvasIso"></canvas>
+    </div>
+
+    <div id="barra-status">
+      <div class="legenda-iso">
+        <div class="leg"><div class="leg-ln" style="background:#2563EB"></div>Seu desenho</div>
+        <div class="leg"><div class="leg-ln" style="background:#CA8A04;border-top:1px dashed #CA8A04;height:0"></div>Solução</div>
+        <div class="leg"><div class="leg-ln" style="background:#15803D"></div>Correto</div>
+        <div class="leg"><div class="leg-ln" style="background:#DC2626"></div>Incorreto</div>
+      </div>
+      <div id="msg-status">Clique para iniciar uma linha</div>
+    </div>
+
+  </div><!-- /pag-desenho -->
+
+  <!-- ============================================
+       ABA 3 — CONTROLES
+  ============================================ -->
+  <div id="pag-controles" class="pagina">
+    <div class="ctrl-grid">
+
+      <div class="ctrl-card">
+        <h3>&#9889; Ações</h3>
+        <button class="abtn abtn-azul"  onclick="novoExercicio()">&#127922; Novo Exercício Aleatório</button>
+        <button class="abtn abtn-verde" onclick="corrigir(); ativarAba('controles')">&#10004; Corrigir Exercício</button>
+        <button class="abtn abtn-ouro"  onclick="verSolucao(); ativarAba('desenho')">&#128065; Ver Solução</button>
+        <button class="abtn abtn-cinza" onclick="desfazer()">&#8617; Desfazer Última Linha</button>
+        <button class="abtn abtn-cinza" onclick="limpar()">&#128465; Limpar Desenho</button>
+        <button class="abtn abtn-peri"  onclick="reiniciar()">&#8634; Reiniciar Pontuação</button>
+      </div>
+
+      <div class="ctrl-card">
+        <h3>&#128202; Resultado</h3>
+        <div id="caixa-feedback" class="feedback">
+          Realize um exercício e clique em <strong>Corrigir</strong> para ver o resultado.
+        </div>
+        <div id="detalhe-resultado" style="margin-top:10px;display:none;">
+          <div class="res-tabela">
+            <div class="res-linha"><span>Acerto</span>                <span class="v" id="r-pct">—</span></div>
+            <div class="res-linha"><span>Linhas corretas</span>       <span class="v v-verde" id="r-corretas">—</span></div>
+            <div class="res-linha"><span>Linhas faltantes</span>      <span class="v v-ouro"  id="r-faltando">—</span></div>
+            <div class="res-linha"><span>Linhas incorretas</span>     <span class="v v-verm"  id="r-extras">—</span></div>
+            <div class="res-linha"><span>Total esperado</span>        <span class="v v-azul"  id="r-total">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrl-card">
+        <h3>&#128200; Indicadores</h3>
+        <div class="ind-grid">
+          <div class="ind-tile"><div class="ind-val" id="ind-ex">0</div><div class="ind-label">Exercícios</div></div>
+          <div class="ind-tile"><div class="ind-val" id="ind-pts">0</div><div class="ind-label">Pontuação</div></div>
+          <div class="ind-tile"><div class="ind-val verde" id="ind-acertos">0</div><div class="ind-label">Acertos ≥80%</div></div>
+          <div class="ind-tile"><div class="ind-val verm"  id="ind-erros">0</div><div class="ind-label">Tentativas</div></div>
+        </div>
+      </div>
+
+      <div class="ctrl-card">
+        <h3>&#8505; Exercício Atual</h3>
+        <div style="font-size:0.78rem;color:var(--ink2);line-height:1.75;" id="ctrl-info">—</div>
+        <div style="margin-top:10px;font-size:0.66rem;color:var(--ink3);line-height:2;">
+          Eixos isométricos:<br>
+          <span style="color:#2563EB">&#9473;&#9473;</span> Direita: 30°<br>
+          <span style="color:#2563EB">&#9473;&#9473;</span> Esquerda: 150°<br>
+          <span style="color:#2563EB">&#124;</span> Vertical: 90°
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /pag-controles -->
+
+</div><!-- /coluna-principal -->
+
+<!-- ============================================
+     PAINEL LATERAL
+============================================ -->
+<div id="coluna-lateral">
+
+  <div class="lat-card">
+    <div class="lat-topo">Exercício</div>
+    <div class="lat-corpo">
+      <div style="font-size:0.82rem;font-weight:700;color:var(--ink);" id="lat-nome">—</div>
+      <div style="font-size:0.7rem;color:var(--ink3);margin-top:3px;line-height:1.5;" id="lat-desc">—</div>
+      <div style="margin-top:7px;" id="lat-tags"></div>
+    </div>
+  </div>
+
+  <div class="lat-card">
+    <div class="lat-topo">Pré-visualização</div>
+    <div class="lat-corpo" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <canvas id="canvasMini" width="200" height="175"></canvas>
+      <div style="font-size:0.58rem;color:var(--ink3);text-align:center;line-height:1.5;">
+        Clique em "Ver Solução" para<br>exibir no canvas principal
+      </div>
+    </div>
+  </div>
+
+  <div class="lat-card">
+    <div class="lat-topo">Ações Rápidas</div>
+    <div class="lat-corpo">
+      <button class="abtn abtn-azul"  onclick="novoExercicio()"                       style="margin-bottom:6px;">&#127922; Novo Exercício</button>
+      <button class="abtn abtn-verde" onclick="corrigir(); ativarAba('controles')"     style="margin-bottom:6px;">&#10004; Corrigir</button>
+      <button class="abtn abtn-cinza" onclick="desfazer()">&#8617; Desfazer</button>
+    </div>
+  </div>
+
+  <div class="lat-card" id="lat-resultado" style="display:none;">
+    <div class="lat-topo">Resultado</div>
+    <div class="lat-corpo">
+      <div id="lat-feedback" class="feedback"></div>
+      <div style="text-align:center;margin-top:8px;">
+        <div style="font-size:2.2rem;font-weight:700;" id="lat-pct">—</div>
+        <div style="font-size:0.6rem;color:var(--ink3);">de acerto</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /coluna-lateral -->
+</div><!-- /corpo -->
+
+<!-- ===================================================
+     SCRIPT PRINCIPAL
+=================================================== -->
+<script>
+/*
+ * ==============================================================
+ *  PERSPECTIVA ISOMÉTRICA — Motor do Aplicativo
+ *  Arquivo único, Vanilla JS, sem dependências externas.
+ *  100% offline, compatível com Chrome, Firefox, Edge.
+ *
+ *  SEÇÕES:
+ *    A. Constantes e Estado Global
+ *    B. Banco de Exercícios (sólidos 3D)
+ *    C. Projeção Isométrica  (3D → 2D)
+ *    D. Vistas Ortográficas (Frontal, Superior, Lateral)
+ *    E. Grade Isométrica e Canvas Principal
+ *    F. Editor de Linhas (Interação do Aluno)
+ *    G. Correção Automática
+ *    H. Interface e Navegação
+ *    I. Inicialização
+ * ==============================================================
+ */
+
+/* ==============================================================
+   A. CONSTANTES E ESTADO GLOBAL
+   ============================================================== */
+
+/*
+ * Constantes trigonométricas usadas na projeção isométrica.
+ * Na projeção isométrica padrão o ângulo de cada eixo horizontal é 30°.
+ *   cos(30°) ≈ 0.866
+ *   sin(30°) = 0.5
+ */
+var COS30 = Math.cos(Math.PI / 6);  /* ≈ 0.866 */
+var SIN30 = 0.5;                     /* sin(30°) = 0.5 */
+
+/* Estado único da aplicação — centralizado para facilitar debug */
+var A = {
+  /* Exercício */
+  exercicio:    null,   /* objeto do exercício atual */
+  exContador:   0,      /* quantos exercícios foram carregados */
+  pontuacao:    0,
+  acertosTotal: 0,
+  tentativas:   0,
+
+  /* Desenho */
+  linhas:       [],     /* [{x1,y1,x2,y2}] — linhas do aluno no canvas */
+  ferramenta:   'linha',
+  snapAtivo:    true,
+  ptInicio:     null,   /* aguarda 2.º clique */
+  solucaoVis:   false,
+  correcaoFeita:false,
+  dadosCorrecao:null,
+
+  /* Canvas — calculados dinamicamente no resize */
+  S:  40,   /* tamanho da célula isométrica em pixels */
+  CX: 0,    /* centro X do canvas */
+  CY: 0,    /* centro Y do canvas */
+};
+
+/* Lista de pontos de snap da grade — recalculada a cada resize/exercício */
+var SNAPS = [];
+
+/* ==============================================================
+   B. BANCO DE EXERCÍCIOS
+   ==============================================================
+   Cada exercício define um sólido 3D através de:
+     vertices: [{x,y,z}]   — coordenadas em unidades de grade
+     edges:    [[i,j], …]  — pares de índices de vértices
+
+   Convenção dos eixos:
+     x → direita         (eixo isométrico a 30°)
+     y → cima / altura   (eixo vertical)
+     z → profundidade    (eixo isométrico a 150°)
+*/
+var EXERCICIOS = [
+
+  /* ---- 1. Cubo simples 1×1×1 ---- */
+  {
+    nome:        'Cubo simples 1×1×1',
+    descricao:   'Um cubo unitário. A figura fundamental da perspectiva isométrica.',
+    dificuldade: 'Básico',
+    vertices: [
+      /* base */
+      {x:0,y:0,z:0}, {x:1,y:0,z:0}, {x:1,y:0,z:1}, {x:0,y:0,z:1},
+      /* topo */
+      {x:0,y:1,z:0}, {x:1,y:1,z:0}, {x:1,y:1,z:1}, {x:0,y:1,z:1}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],   /* arestas da base */
+      [4,5],[5,6],[6,7],[7,4],   /* arestas do topo */
+      [0,4],[1,5],[2,6],[3,7]    /* pilares verticais */
+    ]
+  },
+
+  /* ---- 2. Bloco largo 2×1×1 ---- */
+  {
+    nome:        'Bloco largo 2×1×1',
+    descricao:   'Bloco retangular com largura dupla. Treina proporções.',
+    dificuldade: 'Básico',
+    vertices: [
+      {x:0,y:0,z:0},{x:2,y:0,z:0},{x:2,y:0,z:1},{x:0,y:0,z:1},
+      {x:0,y:1,z:0},{x:2,y:1,z:0},{x:2,y:1,z:1},{x:0,y:1,z:1}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]
+    ]
+  },
+
+  /* ---- 3. Cubo duplo 2×2×2 ---- */
+  {
+    nome:        'Cubo duplo 2×2×2',
+    descricao:   'Cubo de escala 2. Treina percepção de escala na isometria.',
+    dificuldade: 'Básico',
+    vertices: [
+      {x:0,y:0,z:0},{x:2,y:0,z:0},{x:2,y:0,z:2},{x:0,y:0,z:2},
+      {x:0,y:2,z:0},{x:2,y:2,z:0},{x:2,y:2,z:2},{x:0,y:2,z:2}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]
+    ]
+  },
+
+  /* ---- 4. Plataforma 2×1×2 ---- */
+  {
+    nome:        'Plataforma 2×1×2',
+    descricao:   'Base quadrada com altura simples. Trabalha a profundidade isométrica.',
+    dificuldade: 'Básico',
+    vertices: [
+      {x:0,y:0,z:0},{x:2,y:0,z:0},{x:2,y:0,z:2},{x:0,y:0,z:2},
+      {x:0,y:1,z:0},{x:2,y:1,z:0},{x:2,y:1,z:2},{x:0,y:1,z:2}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]
+    ]
+  },
+
+  /* ---- 5. Degrau simples ---- */
+  {
+    nome:        'Degrau simples',
+    descricao:   'Dois blocos em degrau. Exige composição de sólidos na perspectiva.',
+    dificuldade: 'Intermediário',
+    vertices: [
+      /* Bloco inferior 2×1×2 */
+      {x:0,y:0,z:0},{x:2,y:0,z:0},{x:2,y:0,z:2},{x:0,y:0,z:2},
+      {x:0,y:1,z:0},{x:2,y:1,z:0},{x:2,y:1,z:2},{x:0,y:1,z:2},
+      /* Bloco superior 1×1×2 sobre metade direita */
+      {x:1,y:1,z:0},{x:2,y:1,z:0},{x:2,y:1,z:2},{x:1,y:1,z:2},
+      {x:1,y:2,z:0},{x:2,y:2,z:0},{x:2,y:2,z:2},{x:1,y:2,z:2}
+    ],
+    edges: [
+      /* inferior */
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7],
+      /* superior */
+      [8,9],[9,10],[10,11],[11,8],[12,13],[13,14],[14,15],[15,12],
+      [8,12],[9,13],[10,14],[11,15]
+    ]
+  },
+
+  /* ---- 6. Forma em L ---- */
+  {
+    nome:        'Forma em L',
+    descricao:   'Sólido em forma de L — dois blocos perpendiculares compostos.',
+    dificuldade: 'Intermediário',
+    vertices: [
+      /* Parte horizontal 2×1×1 */
+      {x:0,y:0,z:0},{x:2,y:0,z:0},{x:2,y:0,z:1},{x:0,y:0,z:1},
+      {x:0,y:1,z:0},{x:2,y:1,z:0},{x:2,y:1,z:1},{x:0,y:1,z:1},
+      /* Parte vertical 1×2×1 sobre x=0..1 */
+      {x:0,y:1,z:0},{x:1,y:1,z:0},{x:1,y:1,z:1},{x:0,y:1,z:1},
+      {x:0,y:3,z:0},{x:1,y:3,z:0},{x:1,y:3,z:1},{x:0,y:3,z:1}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7],
+      [8,9],[9,10],[10,11],[11,8],[12,13],[13,14],[14,15],[15,12],[8,12],[9,13],[10,14],[11,15]
+    ]
+  },
+
+  /* ---- 7. Torre central ---- */
+  {
+    nome:        'Torre central',
+    descricao:   'Plataforma larga 3×1×3 com coluna central 1×2×1 elevada.',
+    dificuldade: 'Intermediário',
+    vertices: [
+      /* Base 3×1×3 */
+      {x:0,y:0,z:0},{x:3,y:0,z:0},{x:3,y:0,z:3},{x:0,y:0,z:3},
+      {x:0,y:1,z:0},{x:3,y:1,z:0},{x:3,y:1,z:3},{x:0,y:1,z:3},
+      /* Coluna 1×2×1 no centro */
+      {x:1,y:1,z:1},{x:2,y:1,z:1},{x:2,y:1,z:2},{x:1,y:1,z:2},
+      {x:1,y:3,z:1},{x:2,y:3,z:1},{x:2,y:3,z:2},{x:1,y:3,z:2}
+    ],
+    edges: [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7],
+      [8,9],[9,10],[10,11],[11,8],[12,13],[13,14],[14,15],[15,12],[8,12],[9,13],[10,14],[11,15]
+    ]
+  },
+
+  /* ---- 8. Pirâmide de 3 degraus ---- */
+  {
+    nome:        'Pirâmide de 3 degraus',
+    descricao:   'Três plataformas sobrepostas e decrescentes. Exercício avançado.',
+    dificuldade: 'Avançado',
+    vertices: [
+      /* Plataforma 1 — 3×1×3 */
+      {x:0,y:0,z:0},{x:3,y:0,z:0},{x:3,y:0,z:3},{x:0,y:0,z:3},
+      {x:0,y:1,z:0},{x:3,y:1,z:0},{x:3,y:1,z:3},{x:0,y:1,z:3},
+      /* Plataforma 2 — 2×1×2, centralizada (offset 0.5) */
+      {x:0.5,y:1,z:0.5},{x:2.5,y:1,z:0.5},{x:2.5,y:1,z:2.5},{x:0.5,y:1,z:2.5},
+      {x:0.5,y:2,z:0.5},{x:2.5,y:2,z:0.5},{x:2.5,y:2,z:2.5},{x:0.5,y:2,z:2.5},
+      /* Plataforma 3 — 1×1×1, centralizada (offset 1) */
+      {x:1,y:2,z:1},{x:2,y:2,z:1},{x:2,y:2,z:2},{x:1,y:2,z:2},
+      {x:1,y:3,z:1},{x:2,y:3,z:1},{x:2,y:3,z:2},{x:1,y:3,z:2}
+    ],
+    edges: [
+      /* Plataforma 1 */
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7],
+      /* Plataforma 2 */
+      [8,9],[9,10],[10,11],[11,8],[12,13],[13,14],[14,15],[15,12],[8,12],[9,13],[10,14],[11,15],
+      /* Plataforma 3 */
+      [16,17],[17,18],[18,19],[19,16],[20,21],[21,22],[22,23],[23,20],[16,20],[17,21],[18,22],[19,23]
+    ]
+  }
+
+]; /* fim EXERCICIOS */
+
+/* ==============================================================
+   C. PROJEÇÃO ISOMÉTRICA — 3D → 2D
+   ==============================================================
+   Fórmula da projeção isométrica padrão:
+     px = CX + (x - z) * S * cos(30°)
+     py = CY + (x + z) * S * sin(30°) - y * S
+
+   Explicação:
+     • x cresce para direita-baixo (30° da horizontal)
+     • z cresce para esquerda-baixo (150° da horizontal)
+     • y cresce para cima (subtraído no canvas, pois Y canvas cresce p/ baixo)
+     • S é o tamanho da célula em pixels
+     • CX, CY é o ponto de origem central no canvas
+
+   O resultado é a projeção axonométrica isométrica padrão onde
+   os três eixos formam 120° entre si na tela.
+*/
+
+/*
+ * Converte coordenada 3D do sólido para pixel no canvas isométrico.
+ * Usa A.S, A.CX, A.CY (definidos dinamicamente pelo resize).
+ */
+function iso(x, y, z) {
+  return {
+    px: A.CX + (x - z) * A.S * COS30,
+    py: A.CY + (x + z) * A.S * SIN30 - y * A.S
+  };
+}
+
+/*
+ * Versão de iso() que centraliza o sólido no canvas
+ * subtraindo o centroide do exercício (cx, cz).
+ * Isso garante que o sólido sempre fica centrado independente
+ * de sua posição no espaço 3D.
+ */
+function isoExercicio(x, y, z) {
+  var ex = A.exercicio;
+  if (!ex) return iso(x, y, z);
+  return iso(x - A._cx, y, z - A._cz);
+}
+
+/*
+ * Calcula e armazena o centroide (cx, cz) do exercício atual.
+ * Chamado ao carregar um novo exercício.
+ */
+function calcularCentroide() {
+  var ex = A.exercicio;
+  if (!ex) { A._cx = 0; A._cz = 0; return; }
+  var sx = 0, sz = 0;
+  for (var i = 0; i < ex.vertices.length; i++) {
+    sx += ex.vertices[i].x;
+    sz += ex.vertices[i].z;
+  }
+  A._cx = sx / ex.vertices.length;
+  A._cz = sz / ex.vertices.length;
+}
+
+/* ==============================================================
+   D. VISTAS ORTOGRÁFICAS
+   ==============================================================
+   Projeção ortogonal: projeta o sólido 3D em um plano,
+   eliminando um dos três eixos.
+
+   Vista Frontal  → plano XY (elimina Z, olhamos de frente)
+   Vista Superior → plano XZ (elimina Y, olhamos de cima)
+   Vista Lateral  → plano ZY (elimina X, olhamos da esquerda)
+
+   Em cada vista:
+   1. Calcula o bounding box das coordenadas projetadas
+   2. Escala para caber no canvas com margem
+   3. Desenha grade ortogonal de fundo
+   4. Projeta e desenha cada aresta (deduplica sobreposições)
+   5. Marca os vértices projetados com pontos
+
+   Convenção de Y: y cresce para cima no mundo 3D,
+   mas y cresce para baixo no canvas → invertemos: py = H - y_canvas.
+*/
+function desenharVista(canvas, ex, tipo, corLinha) {
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  var verts = ex.vertices;
+
+  /* --- Bounding box nas coordenadas 2D projetadas --- */
+  var minA = Infinity, maxA = -Infinity;
+  var minB = Infinity, maxB = -Infinity;
+  for (var i = 0; i < verts.length; i++) {
+    var v = verts[i];
+    /* a = eixo horizontal da vista, b = eixo vertical da vista */
+    var a = (tipo === 'frontal')  ? v.x
+          : (tipo === 'superior') ? v.x
+          : v.z; /* lateral: usa Z como horizontal */
+    var b = (tipo === 'frontal')  ? v.y
+          : (tipo === 'superior') ? v.z
+          : v.y; /* lateral: usa Y como vertical */
+    if (a < minA) minA = a;
+    if (a > maxA) maxA = a;
+    if (b < minB) minB = b;
+    if (b > maxB) maxB = b;
+  }
+
+  var rA = (maxA - minA) || 1;
+  var rB = (maxB - minB) || 1;
+  var PAD = 22;
+  /* Escala uniforme para manter proporção */
+  var sc = Math.min((W - 2*PAD) / rA, (H - 2*PAD) / rB);
+  /* Offsets para centralizar dentro do canvas */
+  var oA = PAD + ((W - 2*PAD) - rA * sc) / 2;
+  var oB = PAD + ((H - 2*PAD) - rB * sc) / 2;
+
+  /* Função de projeção local: vértice 3D → pixel no canvas da vista */
+  function proj(v) {
+    var a = (tipo === 'frontal')  ? v.x - minA
+          : (tipo === 'superior') ? v.x - minA
+          : v.z - minA;
+    var b = (tipo === 'frontal')  ? v.y - minB
+          : (tipo === 'superior') ? v.z - minB
+          : v.y - minB;
+    return {
+      px: oA + a * sc,
+      py: H - oB - b * sc   /* Y invertido: ↑ mundo → ↑ canvas */
+    };
+  }
+
+  /* --- Grade ortogonal de fundo --- */
+  ctx.strokeStyle = '#E2DDD0';
+  ctx.lineWidth = 0.5;
+  for (var g = Math.floor(minA); g <= Math.ceil(maxA); g++) {
+    var xg = oA + (g - minA) * sc;
+    ctx.beginPath(); ctx.moveTo(xg, PAD/2); ctx.lineTo(xg, H - PAD/2); ctx.stroke();
+  }
+  for (var g = Math.floor(minB); g <= Math.ceil(maxB); g++) {
+    var yg = H - oB - (g - minB) * sc;
+    ctx.beginPath(); ctx.moveTo(PAD/2, yg); ctx.lineTo(W - PAD/2, yg); ctx.stroke();
+  }
+
+  /* --- Arestas projetadas (elimina sobreposições) --- */
+  ctx.strokeStyle = corLinha;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  var desenhadas = {};   /* chave string para deduplicação */
+  for (var i = 0; i < ex.edges.length; i++) {
+    var pa = proj(verts[ex.edges[i][0]]);
+    var pb = proj(verts[ex.edges[i][1]]);
+    /* Ignora projeções degeneradas (aresta sem comprimento visível) */
+    if (Math.abs(pb.px - pa.px) < 0.4 && Math.abs(pb.py - pa.py) < 0.4) continue;
+    var k  = (pa.px|0)+','+(pa.py|0)+','+(pb.px|0)+','+(pb.py|0);
+    var kr = (pb.px|0)+','+(pb.py|0)+','+(pa.px|0)+','+(pa.py|0);
+    if (desenhadas[k] || desenhadas[kr]) continue;
+    desenhadas[k] = true;
+    ctx.beginPath(); ctx.moveTo(pa.px, pa.py); ctx.lineTo(pb.px, pb.py); ctx.stroke();
+  }
+
+  /* --- Pontos nos vértices projetados --- */
+  ctx.fillStyle = corLinha;
+  var ptFeitos = {};
+  for (var i = 0; i < verts.length; i++) {
+    var p = proj(verts[i]);
+    var k = (p.px|0) + ',' + (p.py|0);
+    if (ptFeitos[k]) continue;
+    ptFeitos[k] = true;
+    ctx.beginPath(); ctx.arc(p.px, p.py, 2.4, 0, 2 * Math.PI); ctx.fill();
+  }
+}
+
+/* Redesenha as 3 vistas ortográficas do exercício atual */
+function redesenharVistas() {
+  var ex = A.exercicio;
+  if (!ex) return;
+  desenharVista(document.getElementById('vistaF'), ex, 'frontal',  '#1A4E82');
+  desenharVista(document.getElementById('vistaS'), ex, 'superior', '#15803D');
+  desenharVista(document.getElementById('vistaL'), ex, 'lateral',  '#B91C1C');
+}
+
+/* ==============================================================
+   E. GRADE ISOMÉTRICA E CANVAS PRINCIPAL
+   ==============================================================
+   O canvas principal usa a projeção isométrica para:
+   1. Desenhar a grade de fundo (linhas nos três eixos)
+   2. Mostrar os pontos de snap
+   3. Renderizar as linhas do aluno
+   4. Exibir a solução (se solicitado)
+   5. Destacar a correção (verde/vermelho)
+*/
+
+var canvasIso = document.getElementById('canvasIso');
+var ctxIso    = canvasIso.getContext('2d');
+var N = 12; /* semilargura da grade em células */
+
+/*
+ * Redimensiona o canvas ao tamanho do wrapper disponível.
+ * Recalcula A.S (escala da célula), A.CX, A.CY.
+ * Deve ser chamado ao montar e ao redimensionar a janela.
+ */
+function redimensionarCanvas() {
+  var wrap = document.getElementById('area-iso');
+  var W = wrap.clientWidth;
+  var H = wrap.clientHeight;
+  if (W < 1 || H < 1) return;
+  canvasIso.width  = W;
+  canvasIso.height = H;
+  A.CX = W / 2;
+  A.CY = H * 0.55;
+  /* Escala: grade de 2*N células deve ocupar ~80% da menor dimensão */
+  A.S = Math.min(W, H) / (N * 1.75);
+  A.S = Math.max(18, Math.min(A.S, 55));
+  reconstruirSnaps();
+  redesenharCanvas();
+}
+
+/*
+ * Constrói a lista de pontos de snap da grade isométrica.
+ *
+ * Pontos de snap = projeção de todas as coordenadas inteiras
+ * (gx, gy, gz) dentro do alcance N, nos níveis de altura
+ * presentes nos vértices do exercício atual (incluindo y=0).
+ *
+ * Além disso, adicionamos a projeção exata de cada vértice
+ * do sólido atual para snap perfeito nas arestas da solução.
+ *
+ * Filtramos pontos que caem fora do canvas (com margem).
+ */
+function reconstruirSnaps() {
+  SNAPS = [];
+  var ex = A.exercicio;
+  if (!ex) return;
+
+  /* Alturas presentes no exercício */
+  var alts = {0: true};
+  for (var i = 0; i < ex.vertices.length; i++) alts[ex.vertices[i].y] = true;
+
+  /* Pontos de grade regular */
+  for (var gx = -N; gx <= N; gx++) {
+    for (var gz = -N; gz <= N; gz++) {
+      for (var gy in alts) {
+        gy = parseFloat(gy);
+        var p = isoExercicio(gx, gy, gz);
+        if (p.px > -20 && p.px < canvasIso.width  + 20 &&
+            p.py > -20 && p.py < canvasIso.height + 20) {
+          SNAPS.push({px: p.px, py: p.py});
+        }
+      }
+    }
+  }
+
+  /* Pontos exatos dos vértices do sólido (snap garantido) */
+  for (var i = 0; i < ex.vertices.length; i++) {
+    var v = ex.vertices[i];
+    var p = isoExercicio(v.x, v.y, v.z);
+    SNAPS.push({px: p.px, py: p.py});
+  }
+}
+
+/*
+ * Retorna o ponto de snap mais próximo de (mx, my).
+ * Retorna {px, py} se dentro do limiar, ou null caso contrário.
+ * O limiar é proporcional ao tamanho da célula (A.S * 0.52).
+ */
+function snapProximo(mx, my) {
+  if (!A.snapAtivo) return {px: mx, py: my};
+  var melhor = null, dist = Infinity;
+  var limiar = A.S * 0.52;
+  for (var i = 0; i < SNAPS.length; i++) {
+    var p = SNAPS[i];
+    var d = Math.sqrt((p.px - mx) * (p.px - mx) + (p.py - my) * (p.py - my));
+    if (d < dist) { dist = d; melhor = p; }
+  }
+  return (dist < limiar) ? melhor : null;
+}
+
+/*
+ * Redesenha todo o canvas isométrico.
+ * Ordem de renderização:
+ *   1. Grade de fundo (linhas isométricas + dots de snap)
+ *   2. Linhas do aluno (com coloração de correção se disponível)
+ *   3. Solução (tracejado amarelo, se ativa)
+ *   4. Linhas faltantes (tracejado laranja, após correção)
+ *   5. Marcador do ponto inicial aguardando 2.º clique
+ */
+function redesenharCanvas() {
+  var ctx = ctxIso;
+  var W = canvasIso.width, H = canvasIso.height;
+  ctx.clearRect(0, 0, W, H);
+
+  /* 1. Grade */
+  desenharGradeIso(ctx, W, H);
+
+  /* 2. Linhas do aluno */
+  for (var i = 0; i < A.linhas.length; i++) {
+    var cor = '#2563EB'; /* azul padrão */
+    if (A.correcaoFeita && A.dadosCorrecao) {
+      var cd = A.dadosCorrecao;
+      if (cd.corretas.indexOf(i) >= 0) cor = '#15803D'; /* verde = correto  */
+      if (cd.erradas.indexOf(i)  >= 0) cor = '#DC2626'; /* vermelho = errado */
+    }
+    tracarSolido(ctx, A.linhas[i], cor, 2.5);
+  }
+
+  /* 3. Solução (amarelo tracejado) */
+  if (A.solucaoVis) {
+    var sol = linhasDaSolucao();
+    for (var i = 0; i < sol.length; i++) tracarDash(ctx, sol[i], '#CA8A04', 2, [7, 4]);
+  }
+
+  /* 4. Linhas faltantes (laranja tracejado) */
+  if (A.correcaoFeita && A.dadosCorrecao) {
+    var falt = A.dadosCorrecao.faltando;
+    for (var i = 0; i < falt.length; i++) tracarDash(ctx, falt[i], '#F59E0B', 1.6, [4, 4]);
+  }
+
+  /* 5. Marcador do 1.º ponto */
+  if (A.ptInicio) {
+    ctx.fillStyle = '#2563EB';
+    ctx.beginPath(); ctx.arc(A.ptInicio.px, A.ptInicio.py, 5, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = 'rgba(37,99,235,0.28)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(A.ptInicio.px, A.ptInicio.py, 11, 0, 2 * Math.PI); ctx.stroke();
+  }
+}
+
+/*
+ * Desenha a grade isométrica de fundo.
+ *
+ * A grade é composta por três famílias de linhas paralelas:
+ *   Família 1 — eixo X (30°): linhas que variam em x, gz fixo
+ *   Família 2 — eixo Z (150°): linhas que variam em z, gx fixo
+ *   (Linhas verticais não são desenhadas; emergem dos próprios vértices)
+ *
+ * As linhas dos eixos principais (gx=0, gz=0) são mais escuras.
+ * Pontos de snap são marcados como dots no plano y=0.
+ */
+function desenharGradeIso(ctx, W, H) {
+  var corGrade = 'rgba(180,198,216,0.28)';
+  var corEixo  = 'rgba(90,130,170,0.52)';
+
+  /* Dots nos pontos de snap (y=0 apenas) */
+  ctx.fillStyle = 'rgba(140,165,190,0.45)';
+  for (var i = 0; i < SNAPS.length; i++) {
+    ctx.beginPath(); ctx.arc(SNAPS[i].px, SNAPS[i].py, 1.3, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  /* Família X: para gz fixo, linha de gx=-N a gx=+N (ângulo 30°) */
+  for (var gz = -N; gz <= N; gz++) {
+    var p0 = isoExercicio(-N, 0, gz);
+    var p1 = isoExercicio( N, 0, gz);
+    ctx.strokeStyle = (gz === 0) ? corEixo : corGrade;
+    ctx.lineWidth   = (gz === 0) ? 1 : 0.6;
+    ctx.beginPath(); ctx.moveTo(p0.px, p0.py); ctx.lineTo(p1.px, p1.py); ctx.stroke();
+  }
+
+  /* Família Z: para gx fixo, linha de gz=-N a gz=+N (ângulo 150°) */
+  for (var gx = -N; gx <= N; gx++) {
+    var p0 = isoExercicio(gx, 0, -N);
+    var p1 = isoExercicio(gx, 0,  N);
+    ctx.strokeStyle = (gx === 0) ? corEixo : corGrade;
+    ctx.lineWidth   = (gx === 0) ? 1 : 0.6;
+    ctx.beginPath(); ctx.moveTo(p0.px, p0.py); ctx.lineTo(p1.px, p1.py); ctx.stroke();
+  }
+
+  /* Rótulos dos eixos */
+  ctx.font = '10px Courier New, monospace';
+  ctx.fillStyle = 'rgba(90,130,170,0.6)';
+  var lX = isoExercicio(N + 0.7, 0, 0);
+  var lZ = isoExercicio(0, 0, N + 0.7);
+  var lY = isoExercicio(0, N * 0.3, 0);
+  ctx.fillText('X', lX.px - 4, lX.py + 4);
+  ctx.fillText('Z', lZ.px + 2, lZ.py + 4);
+  ctx.fillText('Y', lY.px - 4, lY.py + 4);
+}
+
+/* Utilitário: traça um segmento sólido */
+function tracarSolido(ctx, ln, cor, larg) {
+  ctx.strokeStyle = cor; ctx.lineWidth = larg || 2;
+  ctx.lineCap = 'round'; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(ln.x1, ln.y1); ctx.lineTo(ln.x2, ln.y2); ctx.stroke();
+}
+
+/* Utilitário: traça um segmento tracejado */
+function tracarDash(ctx, ln, cor, larg, dash) {
+  ctx.strokeStyle = cor; ctx.lineWidth = larg || 1.5;
+  ctx.lineCap = 'round'; ctx.setLineDash(dash || [5, 4]);
+  ctx.beginPath(); ctx.moveTo(ln.x1, ln.y1); ctx.lineTo(ln.x2, ln.y2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/* ==============================================================
+   F. EDITOR DE LINHAS — INTERAÇÃO DO ALUNO
+   ==============================================================
+   O aluno constrói a perspectiva isométrica desenhando linhas
+   por dois cliques consecutivos no canvas.
+
+   Lógica principal:
+     1.º clique → define A.ptInicio (com snap)
+     2.º clique → define ponto final; linha é adicionada ao array A.linhas
+                  A.ptInicio é zerado (pronto para nova linha)
+     clique no mesmo ponto → cancela a linha em andamento
+
+   Ferramenta "apagar": clique próximo a uma linha existente a remove
+   (usa distância de ponto a segmento para encontrar a mais próxima).
+
+   Preview: ao mover o mouse após o 1.º clique, uma linha tracejada
+   azul mostra a posição em tempo real da linha sendo desenhada.
+*/
+var ptHover = null; /* posição atual do cursor (para preview) */
+
+canvasIso.addEventListener('mousemove', function(e) {
+  var r = canvasIso.getBoundingClientRect();
+  var mx = e.clientX - r.left, my = e.clientY - r.top;
+  var snap = snapProximo(mx, my);
+  ptHover = snap || {px: mx, py: my};
+  canvasIso.style.cursor = (A.ferramenta === 'apagar') ? 'pointer'
+                           : (snap ? 'crosshair' : 'default');
+  redesenharCanvas();
+  /* Preview da linha em andamento */
+  if (A.ptInicio && A.ferramenta === 'linha') {
+    tracarDash(ctxIso, {x1:A.ptInicio.px,y1:A.ptInicio.py,x2:ptHover.px,y2:ptHover.py},
+               'rgba(37,99,235,0.38)', 1.4, [5, 4]);
+  }
+  /* Destaque do snap atual */
+  if (snap) {
+    ctxIso.fillStyle = 'rgba(37,99,235,0.4)';
+    ctxIso.beginPath(); ctxIso.arc(snap.px, snap.py, 5, 0, 2*Math.PI); ctxIso.fill();
+  }
+});
+
+canvasIso.addEventListener('mouseleave', function() { ptHover = null; redesenharCanvas(); });
+
+canvasIso.addEventListener('click', function(e) {
+  var r = canvasIso.getBoundingClientRect();
+  processarClique(e.clientX - r.left, e.clientY - r.top);
+});
+
+/* Suporte a dispositivos com toque (tablets/chromebooks) */
+canvasIso.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  var t = e.changedTouches[0];
+  var r = canvasIso.getBoundingClientRect();
+  processarClique(t.clientX - r.left, t.clientY - r.top);
+}, {passive: false});
+
+/*
+ * Processa um clique/toque no canvas.
+ * Ferramenta "linha": alterna entre definir início e fim.
+ * Ferramenta "apagar": remove linha mais próxima.
+ */
+function processarClique(mx, my) {
+  var snap = snapProximo(mx, my);
+  var pt = snap || {px: mx, py: my};
+
+  if (A.ferramenta === 'apagar') {
+    apagarLinhaProxima(mx, my);
+    return;
+  }
+
+  if (!A.ptInicio) {
+    /* 1.º clique: registra ponto inicial */
+    A.ptInicio = pt;
+    setStatus('Ponto inicial marcado — clique no ponto final');
+    redesenharCanvas();
+  } else {
+    /* 2.º clique: registra linha */
+    var dx = pt.px - A.ptInicio.px;
+    var dy = pt.py - A.ptInicio.py;
+    if (Math.sqrt(dx*dx + dy*dy) < 5) {
+      /* Clique no mesmo ponto: cancela */
+      A.ptInicio = null;
+      setStatus('Linha cancelada — clique para iniciar nova linha');
+      redesenharCanvas();
+      return;
+    }
+    A.linhas.push({x1: A.ptInicio.px, y1: A.ptInicio.py, x2: pt.px, y2: pt.py});
+    A.ptInicio = null;
+    A.correcaoFeita = false;
+    setStatus('Linha adicionada (' + A.linhas.length + ') — clique para nova linha');
+    redesenharCanvas();
+  }
+}
+
+/*
+ * Remove a linha do aluno mais próxima do ponto clicado.
+ * Usa a função distPtoSeg para calcular distância ponto–segmento.
+ * Limiar de remoção: 14 pixels.
+ */
+function apagarLinhaProxima(mx, my) {
+  var melhor = -1, melhorD = Infinity;
+  var LIMIAR = 14;
+  for (var i = 0; i < A.linhas.length; i++) {
+    var d = distPtoSeg(mx, my, A.linhas[i].x1, A.linhas[i].y1, A.linhas[i].x2, A.linhas[i].y2);
+    if (d < melhorD) { melhorD = d; melhor = i; }
+  }
+  if (melhor >= 0 && melhorD < LIMIAR) {
+    A.linhas.splice(melhor, 1);
+    A.correcaoFeita = false;
+    setStatus('Linha removida');
+    redesenharCanvas();
+  }
+}
+
+/*
+ * Distância mínima de um ponto P=(px,py) ao segmento A=(ax,ay)-B=(bx,by).
+ * Baseado na projeção paramétrica: t = dot(P-A, B-A) / |B-A|²
+ * clampado a [0,1] para ficar sobre o segmento.
+ */
+function distPtoSeg(px, py, ax, ay, bx, by) {
+  var dx = bx - ax, dy = by - ay;
+  var lsq = dx*dx + dy*dy;
+  if (lsq === 0) return Math.sqrt((px-ax)*(px-ax) + (py-ay)*(py-ay));
+  var t = Math.max(0, Math.min(1, ((px-ax)*dx + (py-ay)*dy) / lsq));
+  var cx = ax + t*dx, cy = ay + t*dy;
+  return Math.sqrt((px-cx)*(px-cx) + (py-cy)*(py-cy));
+}
+
+/* Desfaz a última linha adicionada */
+function desfazer() {
+  if (A.linhas.length > 0) {
+    A.linhas.pop();
+    A.ptInicio = null;
+    A.correcaoFeita = false;
+    setStatus('Última linha removida');
+    redesenharCanvas();
+  }
+}
+
+/* Remove todas as linhas do aluno */
+function limpar() {
+  A.linhas = []; A.ptInicio = null;
+  A.solucaoVis = false; A.correcaoFeita = false; A.dadosCorrecao = null;
+  document.getElementById('lat-resultado').style.display = 'none';
+  setStatus('Desenho limpo — comece a desenhar');
+  redesenharCanvas();
+}
+
+/* ==============================================================
+   G. CORREÇÃO AUTOMÁTICA
+   ==============================================================
+   Algoritmo de correção:
+     1. Calcula as linhas corretas da solução (isoExercicio de cada aresta)
+     2. Para cada linha do aluno, busca a aresta da solução com
+        extremos mais próximos (tolerância = A.S * 0.56 pixels)
+     3. Classifica:
+        - linha do aluno correspondida → correta
+        - linha do aluno não correspondida → incorreta (extra)
+        - aresta da solução sem correspondente → faltando
+     4. Calcula porcentagem de acerto: corretas / total_esperado * 100
+     5. Exibe feedback visual e textual
+*/
+
+/*
+ * Constrói o array de linhas da solução correta,
+ * projetando cada aresta do sólido para coordenadas de canvas.
+ * Usa isoExercicio() para centralizar no canvas atual.
+ */
+function linhasDaSolucao() {
+  var ex = A.exercicio;
+  if (!ex) return [];
+  var r = [];
+  for (var i = 0; i < ex.edges.length; i++) {
+    var va = ex.vertices[ex.edges[i][0]];
+    var vb = ex.vertices[ex.edges[i][1]];
+    var pa = isoExercicio(va.x, va.y, va.z);
+    var pb = isoExercicio(vb.x, vb.y, vb.z);
+    r.push({x1: pa.px, y1: pa.py, x2: pb.px, y2: pb.py});
+  }
+  return r;
+}
+
+/*
+ * Verifica se dois segmentos de linha correspondem (extremos próximos).
+ * Aceita qualquer ordem dos extremos (ida e volta).
+ * Tolerância: soma das distâncias dos dois extremos < tol * 2.
+ */
+function linhasCorrespondem(a, b, tol) {
+  var d1 = Math.sqrt((a.x1-b.x1)*(a.x1-b.x1)+(a.y1-b.y1)*(a.y1-b.y1))
+          +Math.sqrt((a.x2-b.x2)*(a.x2-b.x2)+(a.y2-b.y2)*(a.y2-b.y2));
+  var d2 = Math.sqrt((a.x1-b.x2)*(a.x1-b.x2)+(a.y1-b.y2)*(a.y1-b.y2))
+          +Math.sqrt((a.x2-b.x1)*(a.x2-b.x1)+(a.y2-b.y1)*(a.y2-b.y1));
+  return Math.min(d1, d2) < tol * 2;
+}
+
+/* Executa a correção e atualiza toda a UI de resultado */
+function corrigir() {
+  var ex = A.exercicio;
+  if (!ex) { alert('Nenhum exercício ativo.'); return; }
+  if (A.linhas.length === 0) {
+    mostrarFeedback('aviso', '&#9888; Nenhuma linha desenhada. Vá para a Aba de Desenho e construa a perspectiva isométrica.');
+    return;
+  }
+
+  var solLinhas = linhasDaSolucao();
+  var TOL = A.S * 0.56;   /* tolerância em pixels (~metade de uma célula) */
+
+  var corretas = [];   /* índices nas linhas do aluno */
+  var erradas  = [];
+  var pareadas = {};   /* índices em solLinhas já usados */
+
+  for (var i = 0; i < A.linhas.length; i++) {
+    var achou = false;
+    for (var j = 0; j < solLinhas.length; j++) {
+      if (pareadas[j]) continue;
+      if (linhasCorrespondem(A.linhas[i], solLinhas[j], TOL)) {
+        achou = true; pareadas[j] = true; corretas.push(i); break;
+      }
+    }
+    if (!achou) erradas.push(i);
+  }
+
+  /* Linhas faltando: arestas da solução sem correspondente no aluno */
+  var faltando = [];
+  for (var j = 0; j < solLinhas.length; j++) {
+    if (!pareadas[j]) faltando.push(solLinhas[j]);
+  }
+
+  var total  = solLinhas.length;
+  var nC = corretas.length, nE = erradas.length, nF = faltando.length;
+  var pct = Math.round(nC / total * 100);
+
+  A.correcaoFeita = true;
+  A.dadosCorrecao = {corretas: corretas, erradas: erradas, faltando: faltando};
+  A.tentativas++;
+  if (pct >= 80) { A.pontuacao += pct; A.acertosTotal++; }
+  atualizarIndicadores();
+
+  /* Feedback textual */
+  var tipo, msg;
+  if (pct >= 90)      { tipo = 'ok';    msg = '&#10003; Excelente! Acerto: ' + pct + '% — Perspectiva isométrica muito bem construída!'; }
+  else if (pct >= 70) { tipo = 'aviso'; msg = '&#9888; Bom esforço! Acerto: ' + pct + '% — ' + nF + ' aresta(s) faltando e ' + nE + ' incorreta(s).'; }
+  else                { tipo = 'erro';  msg = '&#10007; Continue tentando! Acerto: ' + pct + '% — Revise as vistas com atenção.'; }
+  mostrarFeedback(tipo, msg);
+
+  /* Tabela de detalhe */
+  document.getElementById('detalhe-resultado').style.display = 'block';
+  document.getElementById('r-pct').textContent      = pct + '%';
+  document.getElementById('r-pct').className        = 'v ' + (pct>=80?'v-verde':pct>=60?'v-ouro':'v-verm');
+  document.getElementById('r-corretas').textContent = nC;
+  document.getElementById('r-faltando').textContent = nF;
+  document.getElementById('r-extras').textContent   = nE;
+  document.getElementById('r-total').textContent    = total;
+
+  /* Painel lateral */
+  var lfb = document.getElementById('lat-feedback');
+  lfb.className = 'feedback ' + tipo;
+  lfb.textContent = pct >= 80 ? 'Excelente!' : pct >= 60 ? 'Bom esforço!' : 'Continue tentando!';
+  var lpct = document.getElementById('lat-pct');
+  lpct.textContent = pct + '%';
+  lpct.style.color = pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--accent)';
+  document.getElementById('lat-resultado').style.display = '';
+
+  /* Animação de sucesso */
+  if (pct >= 80) {
+    var ar = document.getElementById('area-iso');
+    ar.classList.add('pulso-ok');
+    setTimeout(function() { ar.classList.remove('pulso-ok'); }, 2000);
+  }
+
+  redesenharCanvas();
+}
+
+/* Alterna a exibição da solução no canvas principal */
+function verSolucao() {
+  A.solucaoVis = !A.solucaoVis;
+  redesenharCanvas();
+  setStatus(A.solucaoVis ? 'Solução exibida em amarelo tracejado' : 'Solução ocultada');
+}
+
+/* Desenha a mini solução no painel lateral */
+function desenharMiniSolucao() {
+  var cv  = document.getElementById('canvasMini');
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  var ex = A.exercicio;
+  if (!ex) return;
+
+  /* Escala e centro do mini canvas (independentes de A.S/CX/CY) */
+  var Sm = Math.min(W, H) / (N * 1.5);
+  var CXm = W / 2, CYm = H * 0.58;
+  var cx = A._cx, cz = A._cz;
+
+  function isoM(x, y, z) {
+    return {
+      px: CXm + (x - cx - (z - cz)) * Sm * COS30,
+      py: CYm + (x - cx + z - cz) * Sm * SIN30 - y * Sm
+    };
+  }
+
+  /* Grade mini */
+  ctx.strokeStyle = 'rgba(180,198,216,0.32)'; ctx.lineWidth = 0.5;
+  var Nm = 7;
+  for (var g = -Nm; g <= Nm; g++) {
+    var p0=isoM(-Nm,0,g),p1=isoM(Nm,0,g);
+    ctx.beginPath();ctx.moveTo(p0.px,p0.py);ctx.lineTo(p1.px,p1.py);ctx.stroke();
+    p0=isoM(g,0,-Nm);p1=isoM(g,0,Nm);
+    ctx.beginPath();ctx.moveTo(p0.px,p0.py);ctx.lineTo(p1.px,p1.py);ctx.stroke();
+  }
+
+  /* Arestas do sólido */
+  ctx.strokeStyle = '#1A4E82'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+  for (var i = 0; i < ex.edges.length; i++) {
+    var va = ex.vertices[ex.edges[i][0]], vb = ex.vertices[ex.edges[i][1]];
+    var pa = isoM(va.x,va.y,va.z), pb = isoM(vb.x,vb.y,vb.z);
+    ctx.beginPath(); ctx.moveTo(pa.px,pa.py); ctx.lineTo(pb.px,pb.py); ctx.stroke();
+  }
+
+  /* Vértices */
+  ctx.fillStyle = '#1A4E82';
+  for (var i = 0; i < ex.vertices.length; i++) {
+    var p = isoM(ex.vertices[i].x,ex.vertices[i].y,ex.vertices[i].z);
+    ctx.beginPath(); ctx.arc(p.px,p.py,2,0,2*Math.PI); ctx.fill();
+  }
+}
+
+/* ==============================================================
+   H. INTERFACE E NAVEGAÇÃO
+   ============================================================== */
+
+/* Alterna a aba ativa */
+function ativarAba(nome) {
+  document.querySelectorAll('.aba-btn').forEach(function(b) {
+    b.classList.toggle('ativa', b.dataset.aba === nome);
+  });
+  document.querySelectorAll('.pagina').forEach(function(p) {
+    p.classList.toggle('ativa', p.id === 'pag-' + nome);
+  });
+  if (nome === 'desenho') setTimeout(redimensionarCanvas, 30);
+}
+
+/* Define a ferramenta ativa */
+function setFerramenta(f) {
+  A.ferramenta = f;
+  A.ptInicio = null;
+  document.getElementById('fbtn-linha').classList.toggle('ativo', f === 'linha');
+  document.getElementById('fbtn-apagar').classList.toggle('ativo', f === 'apagar');
+  setStatus(f === 'linha' ? 'Ferramenta: Linha — clique para iniciar'
+                          : 'Ferramenta: Apagar — clique sobre uma linha');
+}
+
+/* Alterna snap à grade */
+function toggleSnap() {
+  A.snapAtivo = !A.snapAtivo;
+  document.getElementById('fbtn-snap').textContent = '\u{1F9F2} Snap ' + (A.snapAtivo ? 'ON' : 'OFF');
+  document.getElementById('fbtn-snap').style.opacity = A.snapAtivo ? '1' : '0.5';
+}
+
+/* Mensagem de status na barra inferior do canvas */
+function setStatus(msg) { document.getElementById('msg-status').textContent = msg; }
+
+/* Exibe o feedback textual na aba 3 */
+function mostrarFeedback(tipo, msg) {
+  var el = document.getElementById('caixa-feedback');
+  el.className = 'feedback ' + tipo;
+  el.innerHTML = msg;
+}
+
+/* Atualiza todos os contadores numéricos da interface */
+function atualizarIndicadores() {
+  document.getElementById('ind-ex').textContent       = A.exContador;
+  document.getElementById('ind-pts').textContent      = A.pontuacao;
+  document.getElementById('ind-acertos').textContent  = A.acertosTotal;
+  document.getElementById('ind-erros').textContent    = A.tentativas;
+  document.getElementById('hd-ex').textContent        = A.exContador;
+  document.getElementById('hd-pts').textContent       = A.pontuacao;
+}
+
+/* Carrega um exercício na interface */
+function carregarExercicio(ex) {
+  A.exercicio = ex;
+  A.linhas = []; A.ptInicio = null;
+  A.solucaoVis = false; A.correcaoFeita = false; A.dadosCorrecao = null;
+  A.exContador++;
+
+  calcularCentroide();
+
+  /* Aba 1 */
+  document.getElementById('ex-num').textContent  = 'EX ' + String(A.exContador).padStart(3, '0');
+  document.getElementById('ex-nome').textContent = ex.nome;
+  document.getElementById('ex-desc').textContent = ex.descricao + ' Construa a perspectiva isométrica na Aba de Desenho.';
+  document.getElementById('ex-dif').textContent  = ex.dificuldade;
+
+  /* Painel lateral */
+  document.getElementById('lat-nome').textContent = ex.nome;
+  document.getElementById('lat-desc').textContent = ex.descricao;
+  var dc = {Básico:'tag-basico', Intermediário:'tag-intermediario', Avançado:'tag-avancado'};
+  document.getElementById('lat-tags').innerHTML =
+    '<span class="tag '+(dc[ex.dificuldade]||'tag-info')+'">'+ex.dificuldade+'</span>' +
+    '<span class="tag tag-info">'+ex.edges.length+' arestas</span>';
+
+  /* Aba 3 */
+  document.getElementById('ctrl-info').innerHTML =
+    '<strong>'+ex.nome+'</strong><br>'+ex.descricao+
+    '<br><br>Vértices: <strong>'+ex.vertices.length+'</strong>' +
+    ' &nbsp;|&nbsp; Arestas: <strong>'+ex.edges.length+'</strong>';
+
+  /* Reset feedback */
+  document.getElementById('caixa-feedback').className = 'feedback';
+  document.getElementById('caixa-feedback').textContent = 'Novo exercício carregado. Analise as vistas e construa a perspectiva isométrica!';
+  document.getElementById('detalhe-resultado').style.display = 'none';
+  document.getElementById('lat-resultado').style.display = 'none';
+
+  atualizarIndicadores();
+  redesenharVistas();
+  reconstruirSnaps();
+  desenharMiniSolucao();
+  redimensionarCanvas();
+  setStatus('Novo exercício: ' + ex.nome + ' — clique para iniciar');
+}
+
+/* Carrega um exercício aleatório da lista */
+function novoExercicio() {
+  var idx = Math.floor(Math.random() * EXERCICIOS.length);
+  carregarExercicio(EXERCICIOS[idx]);
+}
+
+/* Reinicia pontuação e contadores */
+function reiniciar() {
+  if (!confirm('Reiniciar pontuação e contadores?')) return;
+  A.pontuacao = 0; A.acertosTotal = 0; A.tentativas = 0; A.exContador = 0;
+  atualizarIndicadores();
+  novoExercicio();
+}
+
+/* Atalhos de teclado */
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); desfazer(); return; }
+  if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+    if (e.key === 'd' || e.key === 'D') setFerramenta('linha');
+    if (e.key === 'e' || e.key === 'E') setFerramenta('apagar');
+    if (e.key === 'n' || e.key === 'N') novoExercicio();
+    if (e.key === 'c' || e.key === 'C') corrigir();
+  }
+});
+
+/* Redimensiona quando a janela muda de tamanho */
+window.addEventListener('resize', function() {
+  if (document.getElementById('pag-desenho').classList.contains('ativa')) {
+    redimensionarCanvas();
+  }
+  redesenharVistas();
+  desenharMiniSolucao();
+});
+
+/* ==============================================================
+   I. INICIALIZAÇÃO
+   ============================================================== */
+window.addEventListener('load', function() {
+  novoExercicio();
+  ativarAba('exercicio');
+});
+</script>
+</body>
+</html>
