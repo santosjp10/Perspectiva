@@ -140,8 +140,9 @@ header{
 }
 
 /* Panels (tabs) */
-.tab-pane{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.tab-pane{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
 .tab-pane.active{display:flex;}
+#tl.active,#tpg.active,#tab-about.active{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
 /* ═══════════════════════════════════════════
    BOTTOM NAVIGATION (mobile-first)
@@ -784,6 +785,52 @@ header{
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+
+/* ═══════════════════════════════════════════
+   COMPARE OVERLAY
+═══════════════════════════════════════════ */
+.compare-overlay{
+  display:none;
+  position:absolute;inset:0;
+  background:rgba(250,250,248,0.97);
+  z-index:200;
+  flex-direction:column;
+  backdrop-filter:blur(4px);
+}
+.compare-overlay.open{display:flex;}
+.compare-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  border-bottom:1px solid var(--bd);
+  background:var(--surface);
+  flex-shrink:0;
+}
+.compare-body{
+  flex:1;display:flex;
+  gap:0;overflow:hidden;
+  min-height:0;
+}
+.compare-panel{
+  flex:1;display:flex;flex-direction:column;
+  padding:8px;min-width:0;
+}
+.compare-panel canvas{
+  flex:1;min-height:0;
+  border:1.5px solid var(--bd);
+}
+.compare-label{
+  font-size:11px;font-weight:600;color:var(--ink2);
+  text-align:center;padding:4px 0;
+  letter-spacing:.3px;text-transform:uppercase;
+}
+.compare-divider{
+  width:1.5px;flex-shrink:0;
+  background:var(--bd);
+}
+@media(max-width:479px){
+  .compare-body{flex-direction:column;}
+  .compare-divider{width:auto;height:1.5px;}
+}
 </style>
 </head>
 <body>
@@ -863,11 +910,33 @@ header{
       <button class="btn dn" onclick="clearDraw()" title="Limpar">🗑</button>
       <div class="tsep"></div>
       <button class="btn gn" onclick="checkAns()">✓ Verificar</button>
+      <button class="btn" id="btnCompare" onclick="toggleCompare()" title="Comparar seu desenho com o gabarito lado a lado" style="gap:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+        Comparar
+      </button>
       <button class="btn" id="btnSol" onclick="showSol()" style="display: none;">👁 Gabarito</button>
       <button class="btn" id="btnEdit" style="display: inline-flex;" onclick="editSol()">✏️ Editar</button>
       <button class="btn gn" id="btnSave" style="display: none;" onclick="saveSol()">💾 Salvar</button>
     </div>
-    <div class="iwrap" id="isoWrap"><canvas id="isoCanvas" width="1368" height="576" style="cursor: crosshair;"></canvas></div>
+    <div class="iwrap" id="isoWrap"><canvas id="isoCanvas" width="1368" height="576" style="cursor: crosshair;"></canvas>
+    <div class="compare-overlay" id="compareOverlay">
+      <div class="compare-header">
+        <span style="font-size:13px;font-weight:600;">Comparação: Seu Desenho × Gabarito</span>
+        <button class="modal-close" onclick="toggleCompare()" style="width:26px;height:26px;font-size:16px;">✕</button>
+      </div>
+      <div class="compare-body">
+        <div class="compare-panel">
+          <div class="compare-label">Seu Desenho</div>
+          <canvas id="cvCompUser" style="width:100%;border-radius:8px;background:#FEFCF8;"></canvas>
+        </div>
+        <div class="compare-divider"></div>
+        <div class="compare-panel">
+          <div class="compare-label" style="color:var(--gn2);">Gabarito</div>
+          <canvas id="cvCompSol" style="width:100%;border-radius:8px;background:#FEFCF8;"></canvas>
+        </div>
+      </div>
+    </div>
+    </div>
     <div class="solnote" id="solNote" style="display: block;">👁 Gabarito em verde · clique <b>✏️ Editar</b> para modificar ou 🗑 para recomeçar</div>
   </div>
 
@@ -2794,6 +2863,100 @@ function publishHTML(){
     if(st) st.innerHTML='<span style="color:var(--rd);">❌ Erro: '+err.message+'</span>';
     console.error(err);
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+// COMPARAÇÃO LADO A LADO
+// ══════════════════════════════════════════════════════════════════
+let compareOpen=false;
+
+function toggleCompare(){
+  compareOpen=!compareOpen;
+  const ov=document.getElementById('compareOverlay');
+  ov.classList.toggle('open',compareOpen);
+  document.getElementById('btnCompare').classList.toggle('active',compareOpen);
+  if(compareOpen) drawCompare();
+}
+
+function drawCompare(){
+  const cvU=document.getElementById('cvCompUser');
+  const cvS=document.getElementById('cvCompSol');
+  if(!cvU||!cvS) return;
+
+  // Calcular bounding box de todas as arestas (usuario + gabarito)
+  const edges=EX[curEx].edges;
+  const allPts=[];
+
+  // Pontos do gabarito
+  edges.forEach(e=>{allPts.push(e[0]);allPts.push(e[1]);});
+  // Pontos do usuario
+  lines.forEach(l=>{allPts.push([l.gx1,l.gy1,l.gz1]);allPts.push([l.gx2,l.gy2,l.gz2]);});
+
+  if(allPts.length===0) return;
+
+  // Projetar todos os pontos para encontrar bounds
+  const COS=Math.cos(Math.PI/6),SIN=Math.sin(Math.PI/6);
+  function proj(x,y,z){return{x:(y-x)*COS,y:(y+x)*SIN-z};}
+
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  allPts.forEach(p=>{
+    const pp=proj(p[0],p[1],p[2]);
+    minX=Math.min(minX,pp.x);maxX=Math.max(maxX,pp.x);
+    minY=Math.min(minY,pp.y);maxY=Math.max(maxY,pp.y);
+  });
+
+  const spanX=maxX-minX||1, spanY=maxY-minY||1;
+
+  // Renderizar em cada canvas
+  [cvU, cvS].forEach((cv,idx)=>{
+    const rect=cv.parentElement.getBoundingClientRect();
+    const W=Math.max(200, Math.floor(rect.width-16));
+    const H=Math.max(150, Math.floor(rect.height-40));
+    cv.width=W; cv.height=H;
+
+    const pad=30;
+    const scale=Math.min((W-pad*2)/spanX, (H-pad*2)/spanY);
+    const ox=W/2 - (minX+maxX)/2*scale;
+    const oy=H/2 - (minY+maxY)/2*scale;
+
+    function tp(x,y,z){const p=proj(x,y,z);return{x:ox+p.x*scale, y:oy+p.y*scale};}
+
+    const c=cv.getContext('2d');
+    c.clearRect(0,0,W,H);
+    c.fillStyle='#FEFCF8';c.fillRect(0,0,W,H);
+
+    // Grade leve
+    c.strokeStyle='#E8E4DC';c.lineWidth=0.5;c.setLineDash([2,3]);
+    const gs=Math.ceil(Math.max(spanX,spanY))+2;
+    for(let i=-gs;i<=gs;i++){
+      const a=tp(-gs,i,0),b=tp(gs,i,0);
+      c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+      const a2=tp(i,-gs,0),b2=tp(i,gs,0);
+      c.beginPath();c.moveTo(a2.x,a2.y);c.lineTo(b2.x,b2.y);c.stroke();
+    }
+    c.setLineDash([]);
+
+    if(idx===0){
+      // Painel esquerdo: desenho do usuario
+      c.strokeStyle='#1A1714';c.lineWidth=2;c.lineCap='round';
+      lines.forEach(l=>{
+        const a=tp(l.gx1,l.gy1,l.gz1),b=tp(l.gx2,l.gy2,l.gz2);
+        c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+      });
+      if(lines.length===0){
+        c.fillStyle='var(--ink3)';c.font='13px Outfit,sans-serif';
+        c.textAlign='center';c.fillText('Nenhuma aresta desenhada',W/2,H/2);
+      }
+    } else {
+      // Painel direito: gabarito
+      c.strokeStyle='#166534';c.lineWidth=2;c.lineCap='round';
+      edges.forEach(e=>{
+        const a=tp(...e[0]),b=tp(...e[1]);
+        c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+      });
+    }
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════
