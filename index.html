@@ -334,6 +334,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', 
    layers: camadas de baixo para cima; em cada camada as linhas vão do fundo para a frente; colunas da esquerda para a direita.
    prims: sólidos convexos — box:[x0,x1,y0,y1,z0,z1] ou prism:{axis,from,to,poly} (polígono convexo nas outras duas coordenadas).
    centros: linhas de centro nas vistas (coordenadas da vista). */
+const B=(...a)=>({box:a}), PR=(axis,from,to,poly)=>({prism:{axis,from,to,poly}});
+const G1='Ficha de vistas (24 peças)', G2='Modelos de cubo, série 1', G3='Modelos de cubo, série 2';
 const EXERCISES = [
   { id:'l', grupo:'Série básica', nome:'Bloco em L', nivel:'Fácil', layers:[["###","###"],["#..","#.."]] },
   { id:'t', grupo:'Série básica', nome:'Bloco em T invertido', nivel:'Fácil', layers:[["####","####"],[".##.",".##."],[".##.",".##."]] },
@@ -371,7 +373,44 @@ const EXERCISES = [
   { id:'b5', grupo:'Exemplos do material (2)', nome:'Bloco chanfrado com nervura central', nivel:'Difícil',
     prims:[{ box:[0,3,1,2,0,3] }, { prism:{ axis:'y', from:0, to:1, poly:[[0,0],[3,0],[3,3],[2,3],[0,1]] } }, { prism:{ axis:'y', from:2, to:3, poly:[[0,0],[3,0],[3,3],[2,3],[0,1]] } }] },
   { id:'b6', grupo:'Exemplos do material (2)', nome:'Bloco trapezoidal com rasgo', nivel:'Difícil',
-    prims:[{ prism:{ axis:'x', from:0, to:2, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:4, to:6, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:2, to:4, poly:[[0,0],[6,0],[6,2],[5,4],[1,4],[0,2]] } }] }
+    prims:[{ prism:{ axis:'x', from:0, to:2, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:4, to:6, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:2, to:4, poly:[[0,0],[6,0],[6,2],[5,4],[1,4],[0,2]] } }] },
+
+ {id:'f01',grupo:G1,nome:'Base com encosto lateral',nivel:'Fácil',prims:[B(0,4,0,7,0,2),B(4,6,0,7,0,5)]},
+ {id:'f02',grupo:G1,nome:'Base com aleta central',nivel:'Fácil',prims:[B(0,5,0,3,0,2),B(2,3,0,3,2,4)]},
+ {id:'f03',grupo:G1,nome:'Base com parede e torre',nivel:'Fácil',prims:[B(0,3,0,2,0,1),B(0,2,2,3,0,3),B(2,3,2,3,0,4)]},
+ {id:'f04',grupo:G1,nome:'Cubo com cunha frontal',nivel:'Difícil',prims:[B(3,6,0,6,0,6),PR('x',0,3,[[0,0],[6,0],[6,6],[3,6]])]},
+ {id:'f05',grupo:G1,nome:'Bloco alto com rampa',nivel:'Médio',prims:[B(3,6,0,6,0,6),PR('x',0,3,[[0,0],[6,0],[6,3],[3,3]])]},
+ {id:'f06',grupo:G1,nome:'Cubo com rebaixo inclinado',nivel:'Difícil',prims:[B(4,6,0,6,0,6),PR('x',0,4,[[0,0],[6,0],[6,6],[4,6],[0,2]])]},
+ {id:'f07',grupo:G1,nome:'Base recortada com cubo',nivel:'Fácil',prims:[B(0,1,1,2,0,1),B(1,3,0,2,0,1),B(2,3,1,2,1,2)]},
+ {id:'f08',grupo:G1,nome:'Base em L com torre escalonada',nivel:'Médio',prims:[B(0,2,2,3,0,1),B(1,2,0,2,0,1),B(2,3,0,1,0,2),B(2,3,1,3,0,3)]},
+ {id:'f09',grupo:G1,nome:'Base com rebaixo e torre escalonada',nivel:'Médio',prims:[B(0,1,1,2,0,1),B(1,2,0,3,0,1),B(2,3,0,1,0,2),B(2,3,1,3,0,3)]},
+ {id:'f10',grupo:G1,nome:'Encosto com rasgo frontal',nivel:'Médio',prims:[B(0,2,0,4,0,2),B(2,4,2,4,0,2),B(4,6,0,4,0,2),B(0,6,4,6,0,5)]},
+ {id:'f11',grupo:G1,nome:'Base vazada com blocos',nivel:'Difícil',prims:[B(0,2,0,2,0,2),B(0,2,4,6,0,2),B(2,4,0,6,0,2),B(4,7,2,6,0,2),B(4,7,0,2,0,3),B(4,7,4,6,2,4)]},
+ {id:'f12',grupo:G1,nome:'Bloco escalonado inclinado',nivel:'Difícil',prims:[PR('x',0,3,[[0,0],[7,0],[7,2],[1,2]]),PR('x',3,5,[[0,0],[7,0],[7,6],[3,6]])]},
+ {id:'f13',grupo:G1,nome:'Bloco com recorte diagonal',nivel:'Difícil',prims:[B(0,8,0,5,0,3),B(0,8,3,5,3,7),PR('z',3,7,[[6,0],[8,0],[8,3],[3,3]])]},
+ {id:'f14',grupo:G1,nome:'Base com bloco chanfrado',nivel:'Médio',prims:[B(0,7,0,5,0,2),PR('x',3,7,[[0,2],[5,2],[5,5],[3,5]])]},
+ {id:'f15',grupo:G1,nome:'Bloco com rampa e degrau',nivel:'Difícil',prims:[B(0,7,5,8,0,5),B(2,5,0,2,0,1),PR('x',2,5,[[2,0],[5,0],[5,5],[2,2]])]},
+ {id:'f16',grupo:G1,nome:'Bloco com canal superior',nivel:'Fácil',prims:[B(0,7,0,5,0,4),B(0,2,0,5,4,6),B(5,7,0,5,4,6)]},
+ {id:'f17',grupo:G1,nome:'Caixa com fundo inclinado',nivel:'Difícil',prims:[B(0,5,0,4,0,1),B(3,5,0,4,1,4),PR('x',0,3,[[2,1],[4,1],[4,4],[3,4]])]},
+ {id:'f18',grupo:G1,nome:'Perfil I assimétrico',nivel:'Médio',prims:[B(0,3,0,6,0,2),B(0,3,2,4,2,4),B(0,3,1,5,4,6)]},
+ {id:'f19',grupo:G1,nome:'Casa sobre base chanfrada',nivel:'Difícil',prims:[PR('x',0,5,[[0,0],[6,0],[6,1],[5,2],[1,2],[0,1]]),PR('x',0,5,[[1,2],[5,2],[5,4],[3,6],[1,4]])]},
+ {id:'f20',grupo:G1,nome:'Bloco com canal lateral',nivel:'Fácil',prims:[B(0,5,0,6,0,2),B(0,5,0,2,2,4),B(0,5,4,6,2,5)]},
+ {id:'f21',grupo:G1,nome:'Telhado com encosto',nivel:'Difícil',prims:[B(0,6,3,5,0,5),PR('y',0,3,[[0,0],[6,0],[6,4],[4,5],[2,5],[0,4]])]},
+ {id:'f22',grupo:G1,nome:'Rampa com cunha',nivel:'Difícil',prims:[PR('x',0,5,[[0,0],[5,0],[5,6],[3,6]]),PR('x',3,5,[[0,0],[1,2],[0,2]])]},
+ {id:'f23',grupo:G1,nome:'Perfil I',nivel:'Fácil',prims:[B(0,3,0,6,0,2),B(0,3,2,4,2,4),B(0,3,0,6,4,6)]},
+ {id:'f24',grupo:G1,nome:'Base com torres escalonadas',nivel:'Médio',prims:[B(0,3,0,6,0,2),B(3,5,0,2,0,6),B(3,5,2,4,0,4),B(3,5,4,6,0,5)]},
+ {id:'s1a',grupo:G2,nome:'Poltrona com degrau',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(2,3,0,2,1,2)]},
+ {id:'s1b',grupo:G2,nome:'Cantoneira com pilar',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(2,3,1,2,1,3)]},
+ {id:'s1c',grupo:G2,nome:'Bloco com ressalto',nivel:'Fácil',prims:[B(0,3,0,3,0,2),B(2,3,0,3,2,3)]},
+ {id:'s1d',grupo:G2,nome:'Cantoneira com escada',nivel:'Médio',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(1,3,0,2,1,2),B(1,3,1,2,2,3)]},
+ {id:'s1e',grupo:G2,nome:'Cubo com rebaixo em L',nivel:'Médio',layers:[["###","###","###"],["###","#.#","..#"],["###","#.#","..#"]]},
+ {id:'s1f',grupo:G2,nome:'Cubo com laje em balanço',nivel:'Médio',prims:[B(0,3,0,3,2,3),B(1,3,0,3,0,2)]},
+ {id:'s2a',grupo:G3,nome:'Cubo com cavidade de canto',nivel:'Fácil',layers:[["###","###","###"],["###","..#","..#"],["###","..#","..#"]]},
+ {id:'s2b',grupo:G3,nome:'Bloco com canal em U',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,1,0,3,1,2),B(2,3,0,3,1,2)]},
+ {id:'s2c',grupo:G3,nome:'Cavidade com degrau',nivel:'Médio',layers:[["###","###","###"],["###",".##",".##"],["###","..#","..#"]]},
+ {id:'s2d',grupo:G3,nome:'Bloco em C',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,0,3,2,3),B(2,3,0,3,1,2)]},
+ {id:'s2e',grupo:G3,nome:'Cavidade com coluna',nivel:'Médio',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(1,2,0,2,1,3)]},
+ {id:'s2f',grupo:G3,nome:'Pilar com canal em L',nivel:'Médio',layers:[["###","###","###"],["###","..#","#.#"],["###","..#","#.#"]]}
 ];
 
 /* ===================== Geometria ===================== */
@@ -1066,8 +1105,8 @@ function reportHtml(st){
   const bars = sm.rows.map((r, i) => {
     const x = 30 + i * bw + bw * 0.18, w = bw * 0.64;
     const h = r.best != null ? Math.max(1, r.best * 1.3) : 0;
-    return (r.best != null ? `<rect x="${x}" y="${150 - h}" width="${w}" height="${h}" fill="${gradeOf(r.best)[1]}"/><text x="${x + w/2}" y="${146 - h}" text-anchor="middle" class="rb-v">${r.best}</text>` : '')
-      + `<text x="${x + w/2}" y="164" text-anchor="middle" class="rb-l">${r.n}</text>`;
+    return (r.best != null ? `<rect x="${x}" y="${150 - h}" width="${w}" height="${h}" fill="${gradeOf(r.best)[1]}"/>${sm.rows.length <= 30 ? `<text x="${x + w/2}" y="${146 - h}" text-anchor="middle" class="rb-v">${r.best}</text>` : ''}` : '')
+      + (sm.rows.length <= 30 || r.n === 1 || r.n % 5 === 0 ? `<text x="${x + w/2}" y="164" text-anchor="middle" class="rb-l">${r.n}</text>` : '');
   }).join('');
   const grid = [0, 60, 80, 100].map(v => `<line x1="30" x2="630" y1="${150 - v*1.3}" y2="${150 - v*1.3}" class="${v === 60 || v === 80 ? 'tr-ref' : 'tr-grid'}"/><text x="25" y="${154 - v*1.3}" text-anchor="end" class="rb-l">${v}</text>`).join('');
   return `
@@ -1145,8 +1184,8 @@ function buildPdf(st){
   const bw = gw / sm.rows.length;
   sm.rows.forEach((r, i) => {
     const x = gx + i * bw + bw * 0.18, w = bw * 0.64;
-    if (r.best != null){ const h = Math.max(0.6, r.best / 100 * gh); doc.setFillColor(...GRC(r.best)); doc.rect(x, gy + gh - h, w, h, 'F'); doc.setTextColor(35,41,47); txt(String(r.best), x + w/2, gy + gh - h - 1.2, { align:'center' }); }
-    doc.setTextColor(95,106,114); txt(String(r.n), x + w/2, gy + gh + 4, { align:'center' });
+    if (r.best != null){ const h = Math.max(0.6, r.best / 100 * gh); doc.setFillColor(...GRC(r.best)); doc.rect(x, gy + gh - h, w, h, 'F'); if (sm.rows.length <= 30){ doc.setTextColor(35,41,47); txt(String(r.best), x + w/2, gy + gh - h - 1.2, { align:'center' }); } }
+    if (sm.rows.length <= 30 || r.n === 1 || r.n % 5 === 0){ doc.setTextColor(95,106,114); txt(String(r.n), x + w/2, gy + gh + 4, { align:'center' }); }
   });
   y = gy + gh + 11;
 
