@@ -336,6 +336,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', 
    centros: linhas de centro nas vistas (coordenadas da vista). */
 const B=(...a)=>({box:a}), PR=(axis,from,to,poly)=>({prism:{axis,from,to,poly}});
 const G1='Ficha de vistas (24 peças)', G2='Modelos de cubo, série 1', G3='Modelos de cubo, série 2';
+const G4='Exercício 6 – Perspectivas (12 peças)';
 const EXERCISES = [
   { id:'l', grupo:'Série básica', nome:'Bloco em L', nivel:'Fácil', layers:[["###","###"],["#..","#.."]] },
   { id:'t', grupo:'Série básica', nome:'Bloco em T invertido', nivel:'Fácil', layers:[["####","####"],[".##.",".##."],[".##.",".##."]] },
@@ -410,7 +411,19 @@ const EXERCISES = [
  {id:'s2c',grupo:G3,nome:'Cavidade com degrau',nivel:'Médio',layers:[["###","###","###"],["###",".##",".##"],["###","..#","..#"]]},
  {id:'s2d',grupo:G3,nome:'Bloco em C',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,0,3,2,3),B(2,3,0,3,1,2)]},
  {id:'s2e',grupo:G3,nome:'Cavidade com coluna',nivel:'Médio',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(1,2,0,2,1,3)]},
- {id:'s2f',grupo:G3,nome:'Pilar com canal em L',nivel:'Médio',layers:[["###","###","###"],["###","..#","#.#"],["###","..#","#.#"]]}
+ {id:'s2f',grupo:G3,nome:'Pilar com canal em L',nivel:'Médio',layers:[["###","###","###"],["###","..#","#.#"],["###","..#","#.#"]]},
+ {id:'p01',grupo:G4,nome:'6.1 – Cantoneira com rampa e parede oblíqua',nivel:'Difícil',prims:[B(0,1,0,1,0,1),B(1,4,0,3,0,1),PR('x',0,1,[[1,0],[3,0],[3,1]]),B(3,4,0,3,0,3),PR('z',1,3,[[2,3],[3,3],[3,1]])]},
+ {id:'p02',grupo:G4,nome:'6.2 – Bloco em C com torre',nivel:'Médio',prims:[B(0,10,0,4,0,2),B(4,10,0,4,2,3),B(4,6,0,4,3,4),B(0,6,0,4,4,6),B(8,10,0,4,3,6)]},
+ {id:'p03',grupo:G4,nome:'6.3 – Bloco com dois degraus',nivel:'Fácil',prims:[B(0,6,0,5,0,2),B(0,6,1,5,2,3),B(1,6,1,5,3,4)]},
+ {id:'p04',grupo:G4,nome:'6.4 – Bloco vazado com canto rebaixado',nivel:'Difícil',prims:[B(0,5,4,5,0,4),B(4,5,0,4,0,4),B(0,1,3,4,0,4),B(3,4,0,1,0,4),B(0,1,0,3,0,3),B(0,3,0,1,0,3)]},
+ {id:'p05',grupo:G4,nome:'6.5 – Bloco com degrau e cunha',nivel:'Médio',prims:[B(0,6,0,6,0,3),B(2,6,0,6,3,4),PR('y',1,6,[[2,4],[6,4],[6,6]])]},
+ {id:'p06',grupo:G4,nome:'6.6 – Bloco com plano inclinado entre paredes',nivel:'Difícil',prims:[PR('x',0,8,[[0,0],[6,0],[6,5],[0,2]]),B(0,2,4,6,0,5),B(6,8,0,6,0,5)]},
+ {id:'p07',grupo:G4,nome:'6.7 – Base com encosto em T',nivel:'Médio',prims:[B(0,7,1,4,0,1),B(2,5,0,1,0,1),B(0,7,3,4,1,3),B(2,5,3,4,3,4)]},
+ {id:'p08',grupo:G4,nome:'6.8 – Bloco com túneis cruzados e furo central',nivel:'Difícil',prims:[B(0,2,0,2,0,4),B(4,6,0,2,0,4),B(0,2,4,6,0,4),B(4,6,4,6,0,4),B(2,4,0,2,2,4),B(2,4,4,6,2,4),B(0,2,2,4,2,4),B(4,6,2,4,2,4)]},
+ {id:'p09',grupo:G4,nome:'6.9 – Bloco chanfrado com rasgo lateral',nivel:'Médio',prims:[PR('y',0,6,[[0,0],[4,0],[4,4],[2,4],[0,2]]),B(4,7,0,1,0,2),B(4,7,5,6,0,2),B(4,6,1,5,0,2)]},
+ {id:'p10',grupo:G4,nome:'6.10 – Bloco com canal e rebaixos',nivel:'Médio',prims:[B(0,8,0,4,0,2),B(0,2,0,1,2,4),B(6,8,0,1,2,4),B(2,6,0,1,2,3),B(0,2,3,4,2,4),B(6,8,3,4,2,4),B(2,6,3,4,2,3)]},
+ {id:'p11',grupo:G4,nome:'6.11 – Coluna com rampa',nivel:'Fácil',prims:[B(0,6,0,4,0,2),B(4,6,0,4,2,8),PR('y',0,4,[[2,2],[4,2],[4,6]])]},
+ {id:'p12',grupo:G4,nome:'6.12 – Bloco com furos passantes cruzados',nivel:'Difícil',prims:[B(0,6,0,6,0,1),B(0,6,0,2,1,5),B(0,6,4,6,1,5),B(0,6,0,6,5,6),B(0,1,0,6,6,8),B(5,6,0,6,6,8),B(0,6,0,6,8,9)]}
 ];
 
 /* ===================== Geometria ===================== */
