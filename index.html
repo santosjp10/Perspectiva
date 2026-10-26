@@ -1053,6 +1053,19 @@ function renderResults(){
 
 /* ===================== Relatório ===================== */
 let downloadsApi = null, downloadsState = 'pending';
+/* Fora do Claude (arquivo local, GitHub Pages, servidor próprio) o download é feito pelo próprio navegador. */
+const inClaude = !!window.claude;
+function browserDownload(filename, data){
+  try {
+    const blob = data instanceof Blob ? data : new Blob([data], { type: /\.csv$/i.test(filename) ? 'text/csv;charset=utf-8' : 'application/octet-stream' });
+    if (window.navigator && typeof window.navigator.msSaveOrOpenBlob === 'function'){ window.navigator.msSaveOrOpenBlob(blob, filename); return true; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return true;
+  } catch (e) { console.error('browserDownload', e); return false; }
+}
 function claudeUse(name, ms){
   return new Promise(res => {
     if (!(window.claude && typeof window.claude.use === 'function')) return res(null);
@@ -1062,7 +1075,8 @@ function claudeUse(name, ms){
   });
 }
 function updateExportNote(){
-  $('#expNote').textContent = downloadsState === 'ready' ? 'Ao exportar, confirme o download na janela de confirmação.'
+  $('#expNote').textContent = !inClaude ? 'O arquivo será salvo na pasta de downloads do navegador.'
+    : downloadsState === 'ready' ? 'Ao exportar, confirme o download na janela de confirmação.'
     : downloadsState === 'pending' ? 'Preparando a exportação...'
     : 'O download de arquivos não está disponível nesta visualização. Use "Ver relatório na tela".';
 }
@@ -1074,11 +1088,14 @@ const GRC = s => s >= 95 ? [43,138,62] : s >= 80 ? [28,78,128] : s >= 60 ? [232,
 let saving = false;
 async function saveFile(filename, data, kind){
   if (saving){ toast('Já há uma exportação aguardando confirmação.'); return; }
-  if (!downloadsApi && downloadsState === 'pending'){
+  if (!downloadsApi && downloadsState === 'pending' && inClaude){
     toast('Preparando a exportação...');
     downloadsApi = await claudeUse('downloads', 5000); downloadsState = downloadsApi ? 'ready' : 'unavailable'; updateExportNote();
   }
-  if (!downloadsApi){ openReport(); toast('O download não está disponível aqui. O relatório foi aberto na tela.'); return; }
+  if (!downloadsApi){
+    if (!inClaude && browserDownload(filename, data)){ toast(`${kind}: ${filename}`); return; }
+    openReport(); toast('O download não está disponível aqui. O relatório foi aberto na tela.'); return;
+  }
   saving = true;
   const slow = setTimeout(() => toast('Aguardando a confirmação do download. Se nenhuma janela apareceu, use "Ver relatório na tela".'), 8000);
   try {
