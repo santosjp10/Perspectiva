@@ -6,7 +6,7 @@
 <title>Isométrica — prática de perspectiva a partir de vistas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="vendor/jspdf.umd.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -201,10 +201,37 @@ ul.fb li.bad{ border-color:var(--bad); }
 .persp-edge{ stroke:var(--ink); stroke-width:1.5; stroke-linecap:round; }
 .persp-grid{ stroke:var(--ink); stroke-width:.6; opacity:.4; }
 .btn[hidden]{ display:none; }
+.aval-banner{ background:var(--accent-soft); border-bottom:1px solid var(--rule); padding:8px 12px; font-size:13.5px; }
+.aval-banner[hidden]{ display:none; }
+.btn:disabled{ cursor:not-allowed; }
 .cell.na{ opacity:.3; cursor:not-allowed; text-decoration:line-through; }
 .toast{ z-index:1000; }
-#repDlg{ width:min(860px,94vw); max-height:90vh; padding:0; border:1px solid var(--rule); border-radius:6px; background:var(--paper); color:var(--ink); }
-#repDlg::backdrop{ background:rgba(20,26,30,.45); }
+#repDlg, .dlg{ width:min(860px,94vw); max-height:92vh; padding:0; border:1px solid var(--rule); border-radius:6px; background:var(--paper); color:var(--ink); }
+#repDlg::backdrop, .dlg::backdrop{ background:rgba(20,26,30,.45); }
+.foot{ padding:4px clamp(14px,3vw,28px) 24px; color:var(--muted); font-size:13px; }
+.foot a{ color:var(--accent); }
+.zoomgrp{ display:inline-flex; align-items:center; gap:4px; }
+.zoomgrp .btn{ padding:7px 9px; min-width:32px; justify-content:center; }
+.zoomlab{ font-size:12.5px; color:var(--muted); min-width:38px; text-align:center; font-variant-numeric:tabular-nums; }
+#iso.panning, #orto.panning{ cursor:grab; }
+.pgrid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; }
+@media (max-width:800px){ .pgrid{ grid-template-columns:minmax(0,1fr); } }
+.opt{ display:flex; gap:8px; align-items:center; margin:4px 0; font-size:14.5px; }
+.txt{ font:inherit; color:var(--ink); background:var(--paper); border:1px solid var(--rule); border-radius:4px; padding:7px 9px; width:100%; }
+textarea.txt{ resize:vertical; }
+.pklist{ max-height:52vh; overflow:auto; border:1px solid var(--rule); border-radius:4px; padding:6px 10px; }
+.pklist h4{ margin:8px 0 2px; font:600 14px "Barlow Condensed", sans-serif; color:var(--muted); display:flex; gap:8px; align-items:center; }
+.pklist label{ display:flex; gap:6px; align-items:center; font-size:13.5px; padding:1px 0; }
+.pklist label.dis{ opacity:.45; }
+.frm{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.frm label{ display:grid; gap:3px; font-size:13px; color:var(--muted); }
+.edwrap{ display:grid; justify-items:start; gap:2px; overflow:auto; }
+.edlab{ font-size:12px; color:var(--muted); }
+.edgrid{ display:grid; gap:3px; }
+.edcell{ width:30px; height:30px; border:1px solid var(--rule); border-radius:3px; background:var(--paper); cursor:pointer; padding:0; }
+.edcell.on{ background:var(--accent); border-color:var(--accent); }
+.edcell.below{ box-shadow:inset 0 0 0 3px var(--accent-soft); }
+#edLayers .btn{ padding:4px 9px; }
 .rep-head{ position:sticky; top:0; z-index:1; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:12px 18px; background:var(--paper); border-bottom:1px solid var(--rule); }
 .rep-head h2{ font:600 22px "Barlow Condensed", sans-serif; margin:0; }
 .rep-actions{ display:flex; flex-wrap:wrap; gap:6px; }
@@ -251,13 +278,16 @@ ul.fb li.bad{ border-color:var(--bad); }
         <select id="exSelect" aria-label="Escolher exercício"></select>
         <button class="btn" id="nextEx" title="Próximo exercício" aria-label="Próximo exercício"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 3 5 5-5 5"/></svg></button>
       </div>
+      <p class="note" id="listaNote" hidden></p>
+      <div class="stale" id="exWarn" hidden></div>
       <div style="margin-top:8px"><button class="btn" id="randEx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="12" height="12" rx="2"/><circle cx="5.5" cy="5.5" r="1" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>Gerar peça aleatória</button></div>
-      <div class="meta"><span>Nível: <b id="exLevel"></b></span><span>Melhor nota: <b id="exBest">—</b></span></div>
+      <div class="meta"><span>Nível: <b id="exLevel"></b></span><span id="exBestLab">Melhor nota: <b id="exBest">—</b></span></div>
     </section>
 
     <section class="panel" aria-labelledby="h-views">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <h2 id="h-views" style="margin:0">Vistas ortográficas</h2>
+        <button class="btn" id="perspBig" hidden title="Ver a perspectiva em tamanho grande" style="padding:5px 9px;font-size:13.5px">Ampliar</button>
         <button class="btn" id="gridBtn" aria-pressed="true" hidden title="Mostrar ou ocultar a malha de 1 módulo nas faces da peça" style="padding:5px 9px;font-size:13.5px">Malha nas faces</button>
       </div>
       <svg id="views" role="img" aria-label="Vistas frontal, lateral esquerda e superior da peça"></svg>
@@ -290,10 +320,18 @@ ul.fb li.bad{ border-color:var(--bad); }
       <button role="tab" id="modeIso" aria-selected="true">Vistas → Perspectiva</button>
       <button role="tab" id="modeOrto" aria-selected="false">Perspectiva → Vistas</button>
     </div>
+    <div class="aval-banner" id="avalBanner" hidden><b>Modo avaliação.</b> Gabarito desativado e até <span id="avalMax">3</span> avaliações por peça em cada modo. Todas as tentativas ficam registradas no relatório.</div>
     <div class="toolbar" role="toolbar" aria-label="Ferramentas de desenho">
       <button class="btn" id="toolLine" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13 13 3"/><circle cx="3" cy="13" r="1.6" fill="currentColor"/><circle cx="13" cy="3" r="1.6" fill="currentColor"/></svg><span id="toolLineLab">Linha</span></button>
       <button class="btn" id="toolHidden" aria-pressed="false" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2.6 2.2"><path d="M3 13 13 3"/></svg>Tracejada</button>
       <button class="btn" id="toolErase" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 13 7.5-7.5-3-3L3 10l3 3h7"/><path d="m5.5 7.5 3 3"/></svg>Borracha</button>
+      <button class="btn" id="toolPan" aria-pressed="false" title="Mover a malha (arrastar). Com dois dedos: mover e ampliar."><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg>Mover</button>
+      <span class="zoomgrp" role="group" aria-label="Zoom">
+        <button class="btn" id="zoomOut" title="Reduzir (−)" aria-label="Reduzir">−</button>
+        <span id="zoomLab" class="zoomlab">100%</span>
+        <button class="btn" id="zoomIn" title="Ampliar (+)" aria-label="Ampliar">+</button>
+        <button class="btn" id="zoomFit" title="Ver a malha inteira (0)">Ajustar</button>
+      </span>
       <span class="sep"></span>
       <button class="btn" id="undoBtn" title="Desfazer (Ctrl+Z)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4 2 7l3 3"/><path d="M2 7h7.5a4 4 0 0 1 0 8H7"/></svg>Desfazer</button>
       <button class="btn" id="redoBtn" title="Refazer (Ctrl+Y)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m11 4 3 3-3 3"/><path d="M14 7H6.5a4 4 0 0 0 0 8H9"/></svg>Refazer</button>
@@ -338,12 +376,109 @@ ul.fb li.bad{ border-color:var(--bad); }
         <button class="btn" id="viewRep" disabled>Ver relatório na tela</button>
       </div>
       <p class="note" id="expNote"></p>
+      <h3>Arquivo de progresso</h3>
+      <div class="exp" style="margin-top:4px">
+        <button class="btn" id="saveProgBtn" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 2h8l2 2v10H3z"/><path d="M5 2v4h6V2M5 14v-4h6v4"/></svg>Salvar progresso</button>
+        <button class="btn" id="loadProgBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h4l1.5 1.5H14V13H2z"/></svg>Abrir progresso</button>
+        <input type="file" id="loadProgInput" accept=".json,application/json" hidden>
+      </div>
+      <p class="note">Salve o arquivo ao terminar cada sessão. Em outro computador, abra o arquivo para continuar de onde parou. Ao concluir, envie o arquivo ao professor.</p>
       <button class="linkish" id="resetProg" hidden>Apagar o progresso deste aluno</button>
     </section>
     <aside class="panel results" id="results" aria-live="polite"></aside>
   </div>
 </main>
+<footer class="foot">Isométrica, versão <span id="appVer"></span>. <a href="#professor" id="profLink">Painel do professor</a></footer>
 <div class="toast" id="toast" role="status"></div>
+<dialog id="perspDlg" class="dlg" aria-labelledby="perspTitle">
+  <div class="rep-head"><h2 id="perspTitle">Perspectiva da peça</h2><div class="rep-actions"><button class="btn primary" id="perspClose">Fechar</button></div></div>
+  <div class="rep-body"><svg id="perspBigSvg" style="width:100%;height:auto;display:block" role="img" aria-label="Perspectiva ampliada da peça"></svg></div>
+</dialog>
+<dialog id="profDlg" class="dlg" aria-labelledby="profTitle" style="width:min(1100px,96vw)">
+  <div class="rep-head">
+    <h2 id="profTitle">Painel do professor</h2>
+    <div class="rep-actions"><button class="btn primary" id="profClose">Fechar</button></div>
+  </div>
+  <div class="modes" role="tablist" aria-label="Seções do painel">
+    <button role="tab" id="ptabLink" aria-selected="true">Link de atividade</button>
+    <button role="tab" id="ptabEd" aria-selected="false">Editor de peças</button>
+    <button role="tab" id="ptabVer" aria-selected="false">Verificar peças</button>
+  </div>
+  <div class="rep-body">
+    <section id="pLink">
+      <p class="note" style="margin-top:0">Monte o link que os alunos vão usar: escolha o modo, se é uma avaliação e quais peças fazem parte da atividade. O relatório e a nota geral passam a considerar só essas peças.</p>
+      <div class="pgrid">
+        <div>
+          <h3>Modo</h3>
+          <label class="opt"><input type="radio" name="lkMode" value="iso" checked> Modo 1: Vistas → Perspectiva</label>
+          <label class="opt"><input type="radio" name="lkMode" value="orto"> Modo 2: Perspectiva → Vistas</label>
+          <label class="opt" style="margin-top:8px"><input type="checkbox" id="lkAval"> Modo avaliação (sem gabarito, até 3 avaliações por peça)</label>
+          <h3>Endereço do aplicativo</h3>
+          <input class="txt" id="lkBase" placeholder="https://santosjp10.github.io/Perspectiva/">
+          <h3>Link gerado</h3>
+          <textarea class="txt" id="lkOut" rows="4" readonly></textarea>
+          <div class="exp"><button class="btn primary" id="lkCopy">Copiar link</button><button class="btn" id="lkTry">Aplicar aqui</button></div>
+          <p class="note" id="lkInfo"></p>
+        </div>
+        <div>
+          <h3>Peças da atividade <span class="note" id="lkCount"></span></h3>
+          <div class="exp" style="margin:0 0 6px"><button class="btn" id="lkAll">Marcar todas</button><button class="btn" id="lkNone">Desmarcar todas</button></div>
+          <div id="lkList" class="pklist"></div>
+        </div>
+      </div>
+    </section>
+    <section id="pEd" hidden>
+      <div class="pgrid">
+        <div>
+          <div class="exp" style="margin-top:0">
+            <select id="edLoad" class="txt" style="flex:1"><option value="">Carregar peça existente…</option></select>
+            <button class="btn" id="edNew">Nova peça</button>
+          </div>
+          <div class="frm">
+            <label>Nome<input class="txt" id="edNome" placeholder="Ex.: Bloco com rasgo"></label>
+            <label>Id (letras e números)<input class="txt" id="edId" placeholder="gerado a partir do nome"></label>
+            <label>Grupo<input class="txt" id="edGrupo" list="edGrupos" placeholder="Ex.: Lista 3"></label>
+            <label>Nível<select class="txt" id="edNivel"><option>Fácil</option><option selected>Médio</option><option>Difícil</option></select></label>
+          </div>
+          <datalist id="edGrupos"></datalist>
+          <div class="modes" role="tablist" style="margin-top:10px">
+            <button role="tab" id="edTabVox" aria-selected="true">Por camadas de blocos</button>
+            <button role="tab" id="edTabCode" aria-selected="false">Código (avançado)</button>
+          </div>
+          <div id="edVox">
+            <div class="frm" style="grid-template-columns:repeat(3,1fr)">
+              <label>Largura (x)<input class="txt" type="number" id="edW" min="1" max="8" value="3"></label>
+              <label>Profundidade (y)<input class="txt" type="number" id="edD" min="1" max="8" value="2"></label>
+              <label>Altura (z)<input class="txt" type="number" id="edH" min="1" max="8" value="2"></label>
+            </div>
+            <div class="exp"><span>Camada:</span><span id="edLayers" class="exp" style="margin:0"></span></div>
+            <p class="note" style="margin:4px 0">Clique nos quadrados para colocar ou tirar blocos de 1 módulo. Vista de cima: fundo da peça no alto, frente embaixo.</p>
+            <div class="edwrap"><div class="edlab">fundo</div><div id="edGrid" class="edgrid"></div><div class="edlab">frente (vista frontal)</div></div>
+            <div class="exp"><button class="btn" id="edFill">Preencher camada</button><button class="btn" id="edClear">Limpar camada</button><button class="btn" id="edCopyDown">Copiar camada de baixo</button></div>
+          </div>
+          <div id="edCode" hidden>
+            <p class="note" style="margin:6px 0">Definição em JSON. Use <code>layers</code> (camadas de blocos) ou <code>prims</code>: <code>{"box":[x0,x1,y0,y1,z0,z1]}</code> e <code>{"prism":{"axis":"x","from":0,"to":4,"poly":[[y,z],…]}}</code>, com polígono convexo.</p>
+            <textarea class="txt" id="edJson" rows="12" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace;font-size:12.5px"></textarea>
+            <div class="exp"><button class="btn" id="edApply">Aplicar código</button></div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Pré-visualização</h3>
+          <svg id="edIso" style="width:100%;max-width:400px;height:auto;display:block;margin:auto" role="img" aria-label="Perspectiva da peça em edição"></svg>
+          <svg id="edViews" style="width:100%;max-width:380px;height:auto;display:block;margin:8px auto 0" role="img" aria-label="Vistas da peça em edição"></svg>
+          <ul class="fb" id="edMsgs" style="margin-top:8px"></ul>
+          <div class="exp"><button class="btn primary" id="edTest">Testar no aplicativo</button><button class="btn" id="edCopy">Copiar código da peça</button></div>
+          <p class="note">Para incluir a peça na lista, cole o código copiado no arquivo <code>exercicios.js</code>, dentro da lista, e publique o arquivo.</p>
+        </div>
+      </div>
+    </section>
+    <section id="pVer" hidden>
+      <p class="note" style="margin-top:0">Confere todas as peças: geometria válida, arestas sobre os nós da malha, gabarito que recebe nota 100 e disponibilidade no modo 2.</p>
+      <div class="exp"><button class="btn primary" id="verRun">Verificar todas as peças</button><span id="verStatus" class="note"></span></div>
+      <div class="rep-scroll"><table class="rep-t" id="verTable"></table></div>
+    </section>
+  </div>
+</dialog>
 <dialog id="repDlg" aria-labelledby="repTitle">
   <div class="rep-head">
     <h2 id="repTitle">Relatório de desempenho</h2>
@@ -356,6 +491,7 @@ ul.fb li.bad{ border-color:var(--bad); }
   <div class="rep-body" id="repBody"></div>
 </dialog>
 
+<script src="exercicios.js"></script>
 <script>
 (() => {
 'use strict';
@@ -370,97 +506,27 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', 
    layers: camadas de baixo para cima; em cada camada as linhas vão do fundo para a frente; colunas da esquerda para a direita.
    prims: sólidos convexos — box:[x0,x1,y0,y1,z0,z1] ou prism:{axis,from,to,poly} (polígono convexo nas outras duas coordenadas).
    centros: linhas de centro nas vistas (coordenadas da vista). */
-const B=(...a)=>({box:a}), PR=(axis,from,to,poly)=>({prism:{axis,from,to,poly}});
-const G1='Ficha de vistas (24 peças)', G2='Modelos de cubo, série 1', G3='Modelos de cubo, série 2';
-const G4='Exercício 6 – Perspectivas (12 peças)';
-const EXERCISES = [
-  { id:'l', grupo:'Série básica', nome:'Bloco em L', nivel:'Fácil', layers:[["###","###"],["#..","#.."]] },
-  { id:'t', grupo:'Série básica', nome:'Bloco em T invertido', nivel:'Fácil', layers:[["####","####"],[".##.",".##."],[".##.",".##."]] },
-  { id:'u', grupo:'Série básica', nome:'Bloco com rasgo em U', nivel:'Fácil', layers:[["####","####"],["#..#","#..#"]] },
-  { id:'degraus', grupo:'Série básica', nome:'Degraus', nivel:'Médio', layers:[["###","###","###"],["###","###","..."],["###","...","..."]] },
-  { id:'escada', grupo:'Série básica', nome:'Escada lateral', nivel:'Médio', layers:[["####","####"],["###.","###."],["##..","##.."],["#...","#..."]] },
-  { id:'canto', grupo:'Série básica', nome:'Canto escalonado', nivel:'Médio', layers:[["###","###","###"],["##.","#..","..."],["#..","...","..."]] },
-  { id:'ponte', grupo:'Série básica', nome:'Ponte', nivel:'Médio', layers:[["#.#","#.#"],["###","###"]] },
-  { id:'recorte', grupo:'Série básica', nome:'Bloco com recortes', nivel:'Difícil', layers:[["####","####","####"],["####","####","##.."],["##..","##..","...."]] },
-  { id:'cruz', grupo:'Série básica', nome:'Cruz com espigão', nivel:'Difícil', layers:[[".#.","###",".#."],[".#.",".#.","..."],[".#.","...","..."]] },
-  { id:'canal', grupo:'Série básica', nome:'Parede com canal', nivel:'Difícil', layers:[["###","###","###"],["#.#","#.#","###"],["...","...","###"]] },
-  { id:'moldura', grupo:'Série básica', nome:'Moldura vazada', nivel:'Difícil', layers:[["###","###"],["#.#","#.#"],["###","###"]] },
-  { id:'ap1', grupo:'Exemplos do material', nome:'Cubo com canto rebaixado', nivel:'Médio',
-    layers:[["####","####","####","####"],["####","####","####","####"],["####","####","..##","..##"],["####","####","..##","..##"]] },
-  { id:'ap2', grupo:'Exemplos do material', nome:'Bloco chanfrado', nivel:'Médio',
-    prims:[{ prism:{ axis:'x', from:0, to:4, poly:[[0,0],[4,0],[4,4],[2,4],[0,2]] } }] },
-  { id:'ap3', grupo:'Exemplos do material', nome:'Bloco com rampa', nivel:'Difícil',
-    prims:[{ box:[0,4,0,4,0,2] }, { box:[0,2,2,4,2,4] }, { prism:{ axis:'x', from:2, to:4, poly:[[0,2],[4,2],[4,4]] } }] },
-  { id:'ap4', grupo:'Exemplos do material', nome:'Suporte em L com furo passante', nivel:'Difícil',
-    layers:[
-      ["#####","#####","#####","#####","#####"],
-      ["#####","#####",".....",".....","....."],
-      ["##..#","##..#",".....",".....","....."],
-      ["##..#","##..#",".....",".....","....."],
-      ["#####","#####",".....",".....","....."]],
-    centros:{ front:[[1.5,3,4.5,3],[3,1.5,3,4.5]], left:[[-0.4,3,2.4,3]], top:[[3,2.6,3,5.4]] } },
-  { id:'b1', grupo:'Exemplos do material (2)', nome:'Bloco com rampa lateral e degraus', nivel:'Médio',
-    prims:[{ prism:{ axis:'x', from:0, to:3, poly:[[0,0],[4,0],[4,2]] } }, { box:[3,6,0,2,0,3] }, { box:[3,6,2,4,0,5] }] },
-  { id:'b2', grupo:'Exemplos do material (2)', nome:'Bloco com degrau e rampa', nivel:'Médio',
-    prims:[{ box:[0,3,0,4,0,2] }, { box:[3,6,0,4,0,3] }, { prism:{ axis:'x', from:3, to:6, poly:[[2,3],[4,3],[4,4]] } }] },
-  { id:'b3', grupo:'Exemplos do material (2)', nome:'Bloco com ressalto e rebaixo frontal', nivel:'Médio',
-    layers:[["######","######","######","######"],["######","######","......","......"],["..####","..####","......","......"],["..####","..####","......","......"]] },
-  { id:'b4', grupo:'Exemplos do material (2)', nome:'Bloco em cadeira', nivel:'Fácil',
-    layers:[["#####","#####","#####"],["#####","...##","...##"],["...##","...##","...##"]] },
-  { id:'b5', grupo:'Exemplos do material (2)', nome:'Bloco chanfrado com nervura central', nivel:'Difícil',
-    prims:[{ box:[0,3,1,2,0,3] }, { prism:{ axis:'y', from:0, to:1, poly:[[0,0],[3,0],[3,3],[2,3],[0,1]] } }, { prism:{ axis:'y', from:2, to:3, poly:[[0,0],[3,0],[3,3],[2,3],[0,1]] } }] },
-  { id:'b6', grupo:'Exemplos do material (2)', nome:'Bloco trapezoidal com rasgo', nivel:'Difícil',
-    prims:[{ prism:{ axis:'x', from:0, to:2, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:4, to:6, poly:[[0,0],[6,0],[6,2],[4,6],[2,6],[0,2]] } }, { prism:{ axis:'x', from:2, to:4, poly:[[0,0],[6,0],[6,2],[5,4],[1,4],[0,2]] } }] },
-
- {id:'f01',grupo:G1,nome:'Base com encosto lateral',nivel:'Fácil',prims:[B(0,4,0,7,0,2),B(4,6,0,7,0,5)]},
- {id:'f02',grupo:G1,nome:'Base com aleta central',nivel:'Fácil',prims:[B(0,5,0,3,0,2),B(2,3,0,3,2,4)]},
- {id:'f03',grupo:G1,nome:'Base com parede e torre',nivel:'Fácil',prims:[B(0,3,0,2,0,1),B(0,2,2,3,0,3),B(2,3,2,3,0,4)]},
- {id:'f04',grupo:G1,nome:'Cubo com cunha frontal',nivel:'Difícil',prims:[B(3,6,0,6,0,6),PR('x',0,3,[[0,0],[6,0],[6,6],[3,6]])]},
- {id:'f05',grupo:G1,nome:'Bloco alto com rampa',nivel:'Médio',prims:[B(3,6,0,6,0,6),PR('x',0,3,[[0,0],[6,0],[6,3],[3,3]])]},
- {id:'f06',grupo:G1,nome:'Cubo com rebaixo inclinado',nivel:'Difícil',prims:[B(4,6,0,6,0,6),PR('x',0,4,[[0,0],[6,0],[6,6],[4,6],[0,2]])]},
- {id:'f07',grupo:G1,nome:'Base recortada com cubo',nivel:'Fácil',prims:[B(0,1,1,2,0,1),B(1,3,0,2,0,1),B(2,3,1,2,1,2)]},
- {id:'f08',grupo:G1,nome:'Base em L com torre escalonada',nivel:'Médio',prims:[B(0,2,2,3,0,1),B(1,2,0,2,0,1),B(2,3,0,1,0,2),B(2,3,1,3,0,3)]},
- {id:'f09',grupo:G1,nome:'Base com rebaixo e torre escalonada',nivel:'Médio',prims:[B(0,1,1,2,0,1),B(1,2,0,3,0,1),B(2,3,0,1,0,2),B(2,3,1,3,0,3)]},
- {id:'f10',grupo:G1,nome:'Encosto com rasgo frontal',nivel:'Médio',prims:[B(0,2,0,4,0,2),B(2,4,2,4,0,2),B(4,6,0,4,0,2),B(0,6,4,6,0,5)]},
- {id:'f11',grupo:G1,nome:'Base vazada com blocos',nivel:'Difícil',prims:[B(0,2,0,2,0,2),B(0,2,4,6,0,2),B(2,4,0,6,0,2),B(4,7,2,6,0,2),B(4,7,0,2,0,3),B(4,7,4,6,2,4)]},
- {id:'f12',grupo:G1,nome:'Bloco escalonado inclinado',nivel:'Difícil',prims:[PR('x',0,3,[[0,0],[7,0],[7,2],[1,2]]),PR('x',3,5,[[0,0],[7,0],[7,6],[3,6]])]},
- {id:'f13',grupo:G1,nome:'Bloco com recorte diagonal',nivel:'Difícil',prims:[B(0,8,0,5,0,3),B(0,8,3,5,3,7),PR('z',3,7,[[6,0],[8,0],[8,3],[3,3]])]},
- {id:'f14',grupo:G1,nome:'Base com bloco chanfrado',nivel:'Médio',prims:[B(0,7,0,5,0,2),PR('x',3,7,[[0,2],[5,2],[5,5],[3,5]])]},
- {id:'f15',grupo:G1,nome:'Bloco com rampa e degrau',nivel:'Difícil',prims:[B(0,7,5,8,0,5),B(2,5,0,2,0,1),PR('x',2,5,[[2,0],[5,0],[5,5],[2,2]])]},
- {id:'f16',grupo:G1,nome:'Bloco com canal superior',nivel:'Fácil',prims:[B(0,7,0,5,0,4),B(0,2,0,5,4,6),B(5,7,0,5,4,6)]},
- {id:'f17',grupo:G1,nome:'Caixa com fundo inclinado',nivel:'Difícil',prims:[B(0,5,0,4,0,1),B(3,5,0,4,1,4),PR('x',0,3,[[2,1],[4,1],[4,4],[3,4]])]},
- {id:'f18',grupo:G1,nome:'Perfil I assimétrico',nivel:'Médio',prims:[B(0,3,0,6,0,2),B(0,3,2,4,2,4),B(0,3,1,5,4,6)]},
- {id:'f19',grupo:G1,nome:'Casa sobre base chanfrada',nivel:'Difícil',prims:[PR('x',0,5,[[0,0],[6,0],[6,1],[5,2],[1,2],[0,1]]),PR('x',0,5,[[1,2],[5,2],[5,4],[3,6],[1,4]])]},
- {id:'f20',grupo:G1,nome:'Bloco com canal lateral',nivel:'Fácil',prims:[B(0,5,0,6,0,2),B(0,5,0,2,2,4),B(0,5,4,6,2,5)]},
- {id:'f21',grupo:G1,nome:'Telhado com encosto',nivel:'Difícil',prims:[B(0,6,3,5,0,5),PR('y',0,3,[[0,0],[6,0],[6,4],[4,5],[2,5],[0,4]])]},
- {id:'f22',grupo:G1,nome:'Rampa com cunha',nivel:'Difícil',prims:[PR('x',0,5,[[0,0],[5,0],[5,6],[3,6]]),PR('x',3,5,[[0,0],[1,2],[0,2]])]},
- {id:'f23',grupo:G1,nome:'Perfil I',nivel:'Fácil',prims:[B(0,3,0,6,0,2),B(0,3,2,4,2,4),B(0,3,0,6,4,6)]},
- {id:'f24',grupo:G1,nome:'Base com torres escalonadas',nivel:'Médio',prims:[B(0,3,0,6,0,2),B(3,5,0,2,0,6),B(3,5,2,4,0,4),B(3,5,4,6,0,5)]},
- {id:'s1a',grupo:G2,nome:'Poltrona com degrau',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(2,3,0,2,1,2)]},
- {id:'s1b',grupo:G2,nome:'Cantoneira com pilar',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(2,3,1,2,1,3)]},
- {id:'s1c',grupo:G2,nome:'Bloco com ressalto',nivel:'Fácil',prims:[B(0,3,0,3,0,2),B(2,3,0,3,2,3)]},
- {id:'s1d',grupo:G2,nome:'Cantoneira com escada',nivel:'Médio',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(1,3,0,2,1,2),B(1,3,1,2,2,3)]},
- {id:'s1e',grupo:G2,nome:'Cubo com rebaixo em L',nivel:'Médio',layers:[["###","###","###"],["###","#.#","..#"],["###","#.#","..#"]]},
- {id:'s1f',grupo:G2,nome:'Cubo com laje em balanço',nivel:'Médio',prims:[B(0,3,0,3,2,3),B(1,3,0,3,0,2)]},
- {id:'s2a',grupo:G3,nome:'Cubo com cavidade de canto',nivel:'Fácil',layers:[["###","###","###"],["###","..#","..#"],["###","..#","..#"]]},
- {id:'s2b',grupo:G3,nome:'Bloco com canal em U',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,1,0,3,1,2),B(2,3,0,3,1,2)]},
- {id:'s2c',grupo:G3,nome:'Cavidade com degrau',nivel:'Médio',layers:[["###","###","###"],["###",".##",".##"],["###","..#","..#"]]},
- {id:'s2d',grupo:G3,nome:'Bloco em C',nivel:'Fácil',prims:[B(0,3,0,3,0,1),B(0,3,0,3,2,3),B(2,3,0,3,1,2)]},
- {id:'s2e',grupo:G3,nome:'Cavidade com coluna',nivel:'Médio',prims:[B(0,3,0,3,0,1),B(0,3,2,3,1,3),B(1,2,0,2,1,3)]},
- {id:'s2f',grupo:G3,nome:'Pilar com canal em L',nivel:'Médio',layers:[["###","###","###"],["###","..#","#.#"],["###","..#","#.#"]]},
- {id:'p01',grupo:G4,nome:'6.1 – Cantoneira com rampa e parede oblíqua',nivel:'Difícil',prims:[B(0,1,0,1,0,1),B(1,4,0,3,0,1),PR('x',0,1,[[1,0],[3,0],[3,1]]),B(3,4,0,3,0,3),PR('z',1,3,[[2,3],[3,3],[3,1]])]},
- {id:'p02',grupo:G4,nome:'6.2 – Bloco em C com torre',nivel:'Médio',prims:[B(0,10,0,4,0,2),B(4,10,0,4,2,3),B(4,6,0,4,3,4),B(0,6,0,4,4,6),B(8,10,0,4,3,6)]},
- {id:'p03',grupo:G4,nome:'6.3 – Bloco com dois degraus',nivel:'Fácil',prims:[B(0,6,0,5,0,2),B(0,6,1,5,2,3),B(1,6,1,5,3,4)]},
- {id:'p04',grupo:G4,nome:'6.4 – Bloco vazado com canto rebaixado',nivel:'Difícil',prims:[B(0,5,4,5,0,4),B(4,5,0,4,0,4),B(0,1,3,4,0,4),B(3,4,0,1,0,4),B(0,1,0,3,0,3),B(0,3,0,1,0,3)]},
- {id:'p05',grupo:G4,nome:'6.5 – Bloco com degrau e cunha',nivel:'Médio',prims:[B(0,6,0,6,0,3),B(2,6,0,6,3,4),PR('y',1,6,[[2,4],[6,4],[6,6]])]},
- {id:'p06',grupo:G4,nome:'6.6 – Bloco com plano inclinado entre paredes',nivel:'Difícil',prims:[PR('x',0,8,[[0,0],[6,0],[6,5],[0,2]]),B(0,2,4,6,0,5),B(6,8,0,6,0,5)]},
- {id:'p07',grupo:G4,nome:'6.7 – Base com encosto em T',nivel:'Médio',prims:[B(0,7,1,4,0,1),B(2,5,0,1,0,1),B(0,7,3,4,1,3),B(2,5,3,4,3,4)]},
- {id:'p08',grupo:G4,nome:'6.8 – Bloco com túneis cruzados e furo central',nivel:'Difícil',prims:[B(0,2,0,2,0,4),B(4,6,0,2,0,4),B(0,2,4,6,0,4),B(4,6,4,6,0,4),B(2,4,0,2,2,4),B(2,4,4,6,2,4),B(0,2,2,4,2,4),B(4,6,2,4,2,4)]},
- {id:'p09',grupo:G4,nome:'6.9 – Bloco chanfrado com rasgo lateral',nivel:'Médio',prims:[PR('y',0,6,[[0,0],[4,0],[4,4],[2,4],[0,2]]),B(4,7,0,1,0,2),B(4,7,5,6,0,2),B(4,6,1,5,0,2)]},
- {id:'p10',grupo:G4,nome:'6.10 – Bloco com canal e rebaixos',nivel:'Médio',prims:[B(0,8,0,4,0,2),B(0,2,0,1,2,4),B(6,8,0,1,2,4),B(2,6,0,1,2,3),B(0,2,3,4,2,4),B(6,8,3,4,2,4),B(2,6,3,4,2,3)]},
- {id:'p11',grupo:G4,nome:'6.11 – Coluna com rampa',nivel:'Fácil',prims:[B(0,6,0,4,0,2),B(4,6,0,4,2,8),PR('y',0,4,[[2,2],[4,2],[4,6]])]},
- {id:'p12',grupo:G4,nome:'6.12 – Bloco com furos passantes cruzados',nivel:'Difícil',prims:[B(0,6,0,6,0,1),B(0,6,0,2,1,5),B(0,6,4,6,1,5),B(0,6,0,6,5,6),B(0,1,0,6,6,8),B(5,6,0,6,6,8),B(0,6,0,6,8,9)]}
-];
+const EXERCICIOS_BASE = null; /* a lista de peças fica no arquivo exercicios.js */
+const APP_VERSION = '2.1';
+const EXERCISES = [], BAD_EXERCISES = [];
+(() => {
+  const src = Array.isArray(window.ISO_EXERCICIOS) ? window.ISO_EXERCICIOS : (Array.isArray(EXERCICIOS_BASE) ? EXERCICIOS_BASE : []);
+  const ids = new Set();
+  src.forEach((e, i) => {
+    const where = `Peça ${i + 1}${e && e.nome ? ' (' + e.nome + ')' : ''}`;
+    try {
+      if (!e || typeof e !== 'object') throw new Error('definição vazia');
+      if (!e.id || !/^[A-Za-z0-9]+$/.test(String(e.id))) throw new Error('id ausente ou com caracteres inválidos (use só letras e números, sem espaços ou hífens)');
+      if (ids.has(String(e.id))) throw new Error(`id "${e.id}" repetido`);
+      if (!e.nome) throw new Error('nome ausente');
+      if (!e.layers && !e.prims) throw new Error('falta a geometria (layers ou prims)');
+      ids.add(String(e.id)); e.id = String(e.id);
+      if (!e.grupo) e.grupo = 'Outras peças';
+      if (!e.nivel) e.nivel = 'Médio';
+      EXERCISES.push(e);
+    } catch (err){ BAD_EXERCISES.push(`${where}: ${err.message}`); }
+  });
+})();
 
 /* ===================== Geometria ===================== */
 const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
@@ -584,6 +650,7 @@ function solve(m){
   /* Perspectiva vista de trás (observador em +x, +y, +z): usada para saber se as vistas podem ser deduzidas. */
   const REAR = { proj:X => [X[0]-X[1], X[0]+X[1]-2*X[2]], ray:p => [[(p[0]+p[1])/2, (p[1]-p[0])/2, 0], [-1,-1,-1]] };
   const expl = { front:new Map(), left:new Map(), top:new Map() };
+  let mixed = 0;
   for (const [A, B] of m.edges){
     const d3 = [B[0]-A[0], B[1]-A[1], B[2]-A[2]];
     const info = {}; let Lc = 1;
@@ -637,6 +704,7 @@ function solve(m){
         const P0 = [Math.round(pa[0] + dd[0]*u/n), Math.round(pa[1] + dd[1]*u/n)];
         const P1 = [Math.round(pa[0] + dd[0]*(u+1)/n), Math.round(pa[1] + dd[1]*(u+1)/n)];
         const key = ek(P0, P1); const prev = res[k].get(key) || 0;
+        if (k === 'iso' && vis[u] > 0 && vis[u] < per && vis[u] + hid[u] === per) mixed++;
         if (vis[u] >= per / 2){
           res[k].set(key, 2);
           if (k === 'iso'){ let s = faces.get(key); if (!s){ s = new Set(); faces.set(key, s); }
@@ -652,12 +720,12 @@ function solve(m){
   const view = k => ({ vis:[...res[k]].filter(([, v]) => v === 2).map(([q]) => q), hid:[...res[k]].filter(([, v]) => v === 1).map(([q]) => q) });
   let needR = false, bad = 0;
   for (const k of ['front','left','top']) for (const [key, v] of res[k]){ if (!v) continue; const b = expl[k].get(key) || 0; if (!b) bad++; else if (!(b & 1)) needR = true; }
-  return { edges, edgeFaces:faces, start, views:{ front:view('front'), left:view('left'), top:view('top') }, orto: bad ? 'X' : needR ? 'FR' : 'F' };
+  return { edges, edgeFaces:faces, start, views:{ front:view('front'), left:view('left'), top:view('top') }, orto: bad ? 'X' : needR ? 'FR' : 'F', mixed };
 }
 
 /* ===================== Vistas ortográficas ===================== */
-function renderViews(m, sol, ex){
-  const svg = $('#views'); svg.innerHTML = '';
+function renderViews(m, sol, ex, svgEl){
+  const svg = svgEl || $('#views'); svg.innerHTML = '';
   const U = 24, gap = 1.6, pad = 0.6, lab = 1.2;
   const totW = Math.max(pad + m.W + gap + m.D + pad, pad + m.W + gap + 7.4), totH = pad + lab + m.H + gap + lab + m.D + pad;
   svg.setAttribute('viewBox', `0 0 ${totW*U} ${totH*U}`);
@@ -710,9 +778,12 @@ function summary(st, mode){
   const rows = [];
   EXERCISES.forEach((e, i) => {
     if (mode === 'orto' && ORTO[e.id] === 'X') return;
+    if (!inList(e)) return;
     const att = hist.filter(h => h.id === e.id);
     const best = bm[e.id] != null ? bm[e.id] : null;
-    rows.push({ n:i + 1, ex:e, attempts:att.length, best, last: att.length ? att[att.length - 1].score : null, lastC: att.length ? att[att.length - 1].c : null });
+    const av = att.filter(h => h.aval);
+    rows.push({ n:i + 1, ex:e, attempts:att.length, best, last: att.length ? att[att.length - 1].score : null, lastC: att.length ? att[att.length - 1].c : null,
+      first: att.length ? att[0].score : null, gab: att.filter(h => h.gab).length, avalBest: av.length ? Math.max(...av.map(h => h.score)) : null, avalN: av.length });
   });
   const done = rows.filter(r => r.best != null);
   const avgDone = done.length ? Math.round(done.reduce((s, r) => s + r.best, 0) / done.length) : 0;
@@ -721,7 +792,9 @@ function summary(st, mode){
   const extras = hist.filter(h => h.id === 'rnd');
   const crit = [0,0,0,0,0]; done.forEach(r => r.lastC && r.lastC.forEach((v, i) => crit[i] += v));
   const critAvg = done.length ? crit.map(v => v / done.length) : null;
-  return { mode, rows, total:rows.length, done:done.length, avgDone, overall, passed, attempts:hist.length, hist, extras, critAvg };
+  const avDone = rows.filter(r => r.avalBest != null);
+  const avalAvg = avDone.length ? Math.round(avDone.reduce((s, r) => s + r.avalBest, 0) / avDone.length) : null;
+  return { mode, rows, total:rows.length, done:done.length, avgDone, overall, passed, attempts:hist.length, hist, extras, critAvg, avalDone:avDone.length, avalAvg };
 }
 function renderProgress(){
   const st = getStudent(false); const sm = summary(st);
@@ -732,6 +805,7 @@ function renderProgress(){
   const cells = $('#cells'); cells.innerHTML = '';
   const byId = new Map(sm.rows.map(r => [r.ex.id, r]));
   EXERCISES.forEach((e, i) => {
+    if (!inList(e)) return;
     const r = byId.get(e.id);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'cell';
     b.textContent = i + 1;
@@ -749,7 +823,7 @@ function renderProgress(){
   });
   renderTrend(st);
   const has = !!(st && st.history.length);
-  $('#expPdf').disabled = !has; $('#expCsv').disabled = !has; $('#viewRep').disabled = !has;
+  $('#expPdf').disabled = !has; $('#expCsv').disabled = !has; $('#viewRep').disabled = !has; $('#saveProgBtn').disabled = !has;
   $('#resetProg').hidden = !has;
   const dl = $('#stuList'); dl.innerHTML = Object.values(prog.students).map(s => `<option value="${esc(s.name)}">`).join('');
   fillSelect();
@@ -775,11 +849,19 @@ function renderTrend(st){
   const t = el('text', { x:Wd - pr, y:Ht - 3, class:'tr-lab', 'text-anchor':'end' }, svg);
   t.textContent = hist.length < all.length ? `últimas ${hist.length} de ${all.length} tentativas` : `${hist.length} tentativa${hist.length > 1 ? 's' : ''}`;
 }
+const MAX_AVAL = 3;
+function attemptsFor(st, id, md, onlyAval){ return st ? st.history.filter(h => h.id === id && modeOf(h) === md && (!onlyAval || h.aval)).length : 0; }
+function avalBlocked(){
+  if (!state.aval || !state.ex || String(state.ex.id).startsWith('rnd')) return false;
+  return attemptsFor(getStudent(false), state.ex.id, state.mode, true) >= MAX_AVAL;
+}
 function recordAttempt(r){
   const st = getStudent(true); if (!st) return;
   const rnd = String(state.ex.id).startsWith('rnd'); const md = state.mode;
   const c = r.cArr || [r.recall, r.precision, r.vF1, r.position, r.conn];
-  st.history.push({ id: rnd ? 'rnd' : state.ex.id, nome: state.ex.nome, nivel: state.ex.nivel, score:r.score, ts:Date.now(), modo:md,
+  const id = rnd ? 'rnd' : state.ex.id;
+  st.history.push({ id, nome: state.ex.nome, nivel: state.ex.nivel, score:r.score, ts:Date.now(), modo:md,
+    tent: attemptsFor(st, id, md, false) + 1, gab: !!state.gabUsed, aval: !!state.aval, lista: state.lista ? state.lista.join('-') : undefined,
     c:c.map(v => Math.round(v * 100) / 100) });
   if (!rnd){ const key = md === 'orto' ? 'bestV' : 'best'; st[key] = st[key] || {}; if (st[key][state.ex.id] == null || r.score > st[key][state.ex.id]) st[key][state.ex.id] = r.score; }
   prog.current = st.name; saveProg();
@@ -872,7 +954,7 @@ function renderOverlay(){
   const g = L.overlay; g.innerHTML = '';
   const r = state.result; if (!r || state.stale) return;
   const line = (k, cls) => { const [a,b,c,d] = pe(k); const p = P(a,b), q = P(c,d); el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:cls }, g); };
-  if (!state.showSolid) r.missingOrig.forEach(k => line(k, 'ov-miss'));
+  if (!state.showSolid && !state.aval) r.missingOrig.forEach(k => line(k, 'ov-miss'));
   r.userClass.forEach(([k, cls]) => line(k, cls));
 }
 function renderStart(){
@@ -910,6 +992,8 @@ function updateButtons(){
   $('#toolLine').setAttribute('aria-pressed', state.tool === 'line');
   $('#toolErase').setAttribute('aria-pressed', state.tool === 'erase');
   $('#toolHidden').setAttribute('aria-pressed', state.tool === 'hidden');
+  $('#toolPan').setAttribute('aria-pressed', state.tool === 'pan');
+  iso.classList.toggle('panning', state.tool === 'pan'); $('#orto').classList.toggle('panning', state.tool === 'pan');
   $('#orto').classList.toggle('erasing', state.tool === 'erase');
   $('#solidBtn').setAttribute('aria-pressed', state.showSolid);
   $('#solidBtn').textContent = state.showSolid ? 'Ocultar gabarito' : 'Ver gabarito';
@@ -918,6 +1002,7 @@ function updateButtons(){
 function updateStatus(){
   const st = $('#status');
   if (state.tool === 'erase') st.innerHTML = 'Borracha: clique ou arraste sobre uma linha para apagá-la.';
+  else if (state.tool === 'pan') st.innerHTML = 'Mover: arraste para deslocar a malha. Use + e − (ou Ctrl + roda do mouse, ou dois dedos) para ampliar. Volte à ferramenta de linha para desenhar.';
   else if (state.mode === 'orto'){
     const tipo = state.tool === 'hidden' ? '<b>tracejada</b> (aresta invisível)' : '<b>contínua</b> (aresta visível)';
     if (state.start) st.innerHTML = `Linha ${tipo}: clique no próximo ponto. Para soltar, clique de novo no último ponto ou pressione <b>Esc</b>.`;
@@ -949,6 +1034,7 @@ function eraseAt(p){
   if (keep.length !== state.segs.length){ if (!state.eraseSnap){ pushUndo(); state.eraseSnap = true; } state.segs = keep; changed(); }
 }
 iso.addEventListener('pointermove', e => {
+  if (gestureMove(e, iso)) return;
   const p = toSvg(e);
   if (state.tool === 'erase'){ if (state.erasing) eraseAt(p); state.hover = null; renderPreview(); return; }
   const n = snap(p); if (!same(n, state.hover)){ state.hover = n; renderPreview(); }
@@ -958,11 +1044,13 @@ iso.addEventListener('pointerdown', e => {
   if (e.button === 2) return;
   e.preventDefault();
   try { iso.setPointerCapture(e.pointerId); } catch (_) {}
+  if (gestureDown(e, iso)) return;
   const p = toSvg(e);
   if (state.tool === 'erase'){ state.erasing = true; state.eraseSnap = null; eraseAt(p); return; }
   state.down = snap(p);
 });
 iso.addEventListener('pointerup', e => {
+  if (gestureUp(e)) return;
   if (state.tool === 'erase'){ state.erasing = false; state.eraseSnap = null; return; }
   const d = state.down; state.down = null; if (!d) return;
   const n = snap(toSvg(e));
@@ -982,7 +1070,12 @@ $('#toolHidden').onclick = () => setTool('hidden');
 $('#undoBtn').onclick = undo;
 $('#redoBtn').onclick = redo;
 $('#clearBtn').onclick = () => { if (!state.segs.length) return; pushUndo(); state.segs = []; state.start = null; changed(); toast('Desenho apagado. Use Desfazer para recuperar.'); };
-$('#solidBtn').onclick = () => { state.showSolid = !state.showSolid; renderSolid(); renderOverlay(); updateButtons(); };
+$('#solidBtn').onclick = () => {
+  if (state.aval){ toast('O gabarito está desativado no modo avaliação.'); return; }
+  state.showSolid = !state.showSolid;
+  if (state.showSolid) state.gabUsed = true;
+  renderSolid(); renderOverlay(); updateButtons();
+};
 $('#evalBtn').onclick = evaluate;
 document.addEventListener('keydown', e => {
   if (e.target.closest('select, input, textarea')) return;
@@ -991,6 +1084,10 @@ document.addEventListener('keydown', e => {
   else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))){ e.preventDefault(); redo(); }
   else if (e.ctrlKey || e.metaKey || e.altKey) return;
   else if (k === 'escape'){ state.start = null; renderPreview(); updateStatus(); }
+  else if (k === '+' || k === '='){ zoomCenter(1.25); }
+  else if (k === '-'){ zoomCenter(1 / 1.25); }
+  else if (k === '0'){ $('#zoomFit').click(); }
+  else if (k === 'm'){ setTool('pan'); }
   else if (k === 'l') setTool('line');
   else if (k === 't' && state.mode === 'orto') setTool('hidden');
   else if (k === 'e') setTool('erase');
@@ -1035,6 +1132,7 @@ function maximal(set){
   return out;
 }
 function evaluate(){
+  if (avalBlocked()){ toast(`Limite de ${MAX_AVAL} avaliações desta peça atingido no modo avaliação.`); return; }
   if (state.mode === 'orto') return oEvaluate();
   if (!$('#stuName').value.trim()){ toast('Digite seu nome no painel Progresso para registrar a avaliação.'); $('#stuName').focus(); return; }
   const sol = state.sol.edges;
@@ -1076,7 +1174,7 @@ function evaluate(){
   let score = 100 * (0.35 * recall + 0.25 * (totalSolSegs ? complete / totalSolSegs : 0) + 0.15 * precision + 0.10 * vF1 + 0.10 * position + 0.05 * conn);
   const perfect = !shifted && tp === sol.size && U.size === sol.size;
   if (perfect) score = 100;
-  score = Math.max(0, Math.min(100, Math.round(score)));
+  score = Math.max(0, Math.min(perfect ? 100 : 94, Math.round(score)));
 
   const userClass = [];
   for (const k of U0){
@@ -1166,9 +1264,9 @@ const VIEWS = ['front','left','top'];
 const VNAME = { front:'Vista frontal', left:'Vista lateral esquerda', top:'Vista superior' };
 const drawings = { iso:null, orto:null };
 let modeApplied = false;
-function blankDrawing(){ return { segs:[], undo:[], redo:[], result:null, stale:false }; }
-function saveDrawing(){ drawings[state.mode] = { segs:state.segs, undo:state.undo, redo:state.redo, result:state.result, stale:state.stale }; }
-function restoreDrawing(md){ const d = drawings[md] || blankDrawing(); state.segs = d.segs; state.undo = d.undo; state.redo = d.redo; state.result = d.result; state.stale = d.stale; state.start = null; state.hover = null; }
+function blankDrawing(){ return { segs:[], undo:[], redo:[], result:null, stale:false, gabUsed:false }; }
+function saveDrawing(){ drawings[state.mode] = { segs:state.segs, undo:state.undo, redo:state.redo, result:state.result, stale:state.stale, gabUsed:state.gabUsed }; }
+function restoreDrawing(md){ const d = drawings[md] || blankDrawing(); state.segs = d.segs; state.undo = d.undo; state.redo = d.redo; state.result = d.result; state.stale = d.stale; state.gabUsed = !!d.gabUsed; state.start = null; state.hover = null; }
 
 function oSetup(m){
   const R = Math.max(m.W, m.D, m.H) + 2, gap = 2, G = 1 + R + gap + R + 1;
@@ -1218,7 +1316,7 @@ function oRenderUser(){
 function oRenderOverlay(){
   const g = OL.overlay; g.innerHTML = '';
   const r = state.result; if (!r || state.stale || r.mode !== 'orto') return;
-  for (const [k, key, cls] of r.items){ if (state.showSolid && cls.startsWith('ov-miss')) continue; localLine(k, key, cls, g); }
+  for (const [k, key, cls] of r.items){ if ((state.showSolid || state.aval) && cls.startsWith('ov-miss')) continue; localLine(k, key, cls, g); }
 }
 function oRenderPreview(){
   const g = OL.preview; g.innerHTML = '';
@@ -1245,6 +1343,7 @@ function oRenderPreview(){
 function oRenderAll(){ oRenderGrid(); oRenderSolid(); oRenderUser(); oRenderOverlay(); oRenderPreview(); updateButtons(); updateStatus(); }
 
 ortoSvg.addEventListener('pointermove', e => {
+  if (gestureMove(e, ortoSvg)) return;
   const p = oToSvg(e);
   if (state.tool === 'erase'){ if (state.erasing) eraseAt(p); state.hover = null; oRenderPreview(); return; }
   const n = oSnap(p); if (!same(n, state.hover)){ state.hover = n; oRenderPreview(); }
@@ -1254,11 +1353,13 @@ ortoSvg.addEventListener('pointerdown', e => {
   if (e.button === 2) return;
   e.preventDefault();
   try { ortoSvg.setPointerCapture(e.pointerId); } catch (_) {}
+  if (gestureDown(e, ortoSvg)) return;
   const p = oToSvg(e);
   if (state.tool === 'erase'){ state.erasing = true; state.eraseSnap = null; eraseAt(p); return; }
   state.down = oSnap(p);
 });
 ortoSvg.addEventListener('pointerup', e => {
+  if (gestureUp(e)) return;
   if (state.tool === 'erase'){ state.erasing = false; state.eraseSnap = null; return; }
   const d = state.down; state.down = null; if (!d) return;
   const n = oSnap(oToSvg(e)); const t = state.tool === 'hidden' ? 'hid' : 'vis';
@@ -1389,7 +1490,8 @@ $('#gridBtn').onclick = () => {
 };
 function applyModeUI(){
   const o = state.mode === 'orto';
-  $('#gridBtn').hidden = !o; $('#gridBtn').setAttribute('aria-pressed', state.faceGrid);
+  $('#gridBtn').hidden = !o; $('#gridBtn').setAttribute('aria-pressed', state.faceGrid); $('#perspBig').hidden = !o;
+  applyView(state.mode);
   $('#modeIso').setAttribute('aria-selected', !o); $('#modeOrto').setAttribute('aria-selected', o);
   $('#iso').toggleAttribute('hidden', o); $('#orto').toggleAttribute('hidden', !o);
   $('#toolHidden').hidden = !o;
@@ -1401,13 +1503,36 @@ function applyModeUI(){
   $('#board').setAttribute('aria-label', o ? 'Malha quadriculada para as vistas' : 'Malha isométrica');
   $('#cbMode').textContent = o ? 'Vistas ortográficas' : 'Perspectiva isométrica';
 }
+function parseHash(){
+  const tk = location.hash.replace('#', '').split('-').filter(Boolean);
+  const r = { aval:false, mode:'iso', lista:null, prof:false };
+  if (tk[0] === 'professor'){ r.prof = true; return r; }
+  if (tk[0] === 'avaliacao'){ r.aval = true; tk.shift(); }
+  if (tk[0] === 'vistas'){ r.mode = 'orto'; tk.shift(); } else if (tk[0] === 'perspectiva') tk.shift();
+  if (tk[0] === 'lista'){ tk.shift(); const ids = new Set(EXERCISES.map(e => e.id)); r.lista = tk.filter(id => ids.has(id)); if (!r.lista.length) r.lista = null; }
+  return r;
+}
+const hashFor = md => '#' + [state.aval ? 'avaliacao' : '', md === 'orto' ? 'vistas' : 'perspectiva', state.lista ? 'lista-' + state.lista.join('-') : ''].filter(Boolean).join('-');
+const inList = e => !state.lista || state.lista.includes(e.id);
+function applyListUI(){
+  const n = $('#listaNote');
+  n.hidden = !state.lista;
+  if (state.lista) n.textContent = `Atividade definida pelo professor: ${state.lista.length} peça${state.lista.length > 1 ? 's' : ''}. A nota geral considera só essas peças.`;
+  $('#randEx').disabled = !!state.aval || !!state.lista;
+}
+function applyAvalUI(){
+  $('#avalBanner').hidden = !state.aval; $('#avalMax').textContent = MAX_AVAL;
+  $('#solidBtn').hidden = state.aval;
+  $('#randEx').disabled = !!state.aval || !!state.lista;
+  if (state.aval && state.showSolid){ state.showSolid = false; renderSolid(); renderOverlay(); }
+}
 function setMode(md){
   if (md === state.mode && modeApplied) return;
   saveDrawing();
   state.mode = md;
   if (md !== 'orto' && state.tool === 'hidden') state.tool = 'line';
   applyModeUI();
-  const h = md === 'orto' ? '#vistas' : '#perspectiva';
+  const h = hashFor(md);
   if (location.hash !== h) location.hash = h;
   if (md === 'orto' && state.sol && state.sol.orto === 'X'){
     const j = nextAvailable(Math.max(0, state.idx), 1);
@@ -1498,7 +1623,7 @@ function oEvaluate(){
   let score = 100 * (0.45 * coverage + 0.25 * precision + 0.15 * typeAcc + 0.15 * corr);
   const perfect = okV === sv && okH === sh && !wrong && !extra && !outside;
   if (perfect) score = 100;
-  score = Math.max(0, Math.min(100, Math.round(score)));
+  score = Math.max(0, Math.min(perfect ? 100 : 94, Math.round(score)));
 
   const fb = []; const pl = (n, s1, s2) => n === 1 ? s1 : s2;
   if (perfect) fb.push(['good', 'Vistas idênticas ao gabarito: todas as linhas no lugar, com o tipo correto.']);
@@ -1561,6 +1686,287 @@ function oRenderResults(){
       ${r.sh ? '<span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--warn)" stroke-width="2.6" stroke-dasharray="1.5 4"/></svg>tracejada faltante</span>' : ''}
     </div>`;
 }
+
+/* ===================== Zoom e deslocamento da malha ===================== */
+const VIEW = { iso:{ z:1, x:0, y:0, W:760, H:620 }, orto:{ z:1, x:0, y:0, W:760, H:760 } };
+const svgOf = md => md === 'orto' ? ortoSvg : iso;
+function applyView(md){
+  md = md || state.mode; const v = VIEW[md]; const w = v.W / v.z, h = v.H / v.z;
+  v.x = Math.max(0, Math.min(v.W - w, v.x)); v.y = Math.max(0, Math.min(v.H - h, v.y));
+  svgOf(md).setAttribute('viewBox', `${v.x.toFixed(2)} ${v.y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+  if (md === state.mode){ $('#zoomLab').textContent = Math.round(v.z * 100) + '%'; $('#zoomOut').disabled = v.z <= 1; $('#zoomIn').disabled = v.z >= 4; }
+}
+function resetViews(){ for (const md of ['iso', 'orto']){ Object.assign(VIEW[md], { z:1, x:0, y:0 }); applyView(md); } }
+function zoomAt(f, sx, sy){
+  const v = VIEW[state.mode]; const nz = Math.max(1, Math.min(4, v.z * f)); const k = v.z / nz;
+  v.x = sx - (sx - v.x) * k; v.y = sy - (sy - v.y) * k; v.z = nz; applyView();
+}
+function zoomCenter(f){ const v = VIEW[state.mode]; zoomAt(f, v.x + v.W / v.z / 2, v.y + v.H / v.z / 2); }
+$('#zoomIn').onclick = () => zoomCenter(1.25);
+$('#zoomOut').onclick = () => zoomCenter(1 / 1.25);
+$('#zoomFit').onclick = () => { Object.assign(VIEW[state.mode], { z:1, x:0, y:0 }); applyView(); };
+$('#toolPan').onclick = () => setTool('pan');
+function svgPoint(svg, cx, cy){ const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+const ptrs = new Map(); let gesture = null;
+function gestureDown(e, svg){
+  ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (ptrs.size >= 2){
+    state.down = null; state.erasing = false; state.start = null;
+    const [a, b] = [...ptrs.values()]; const v = VIEW[state.mode];
+    gesture = { type:'pinch', d0:Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), z0:v.z, mid:svgPoint(svg, (a.x + b.x) / 2, (a.y + b.y) / 2) };
+    return true;
+  }
+  if (state.tool === 'pan' || e.button === 1){ const v = VIEW[state.mode]; gesture = { type:'pan', cx:e.clientX, cy:e.clientY, x0:v.x, y0:v.y }; return true; }
+  return !!gesture;
+}
+function gestureMove(e, svg){
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  if (!gesture) return false;
+  const v = VIEW[state.mode]; const r = svg.getBoundingClientRect();
+  if (gesture.type === 'pan'){
+    if (!ptrs.has(e.pointerId)) return true;
+    const sc = (v.W / v.z) / r.width; v.x = gesture.x0 - (e.clientX - gesture.cx) * sc; v.y = gesture.y0 - (e.clientY - gesture.cy) * sc; applyView(); return true;
+  }
+  if (ptrs.size >= 2){
+    const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
+    v.z = Math.max(1, Math.min(4, gesture.z0 * d / gesture.d0));
+    const sc = (v.W / v.z) / r.width;
+    v.x = gesture.mid.x - ((a.x + b.x) / 2 - r.left) * sc; v.y = gesture.mid.y - ((a.y + b.y) / 2 - r.top) * sc; applyView();
+  }
+  return true;
+}
+function gestureUp(e){ ptrs.delete(e.pointerId); if (!gesture) return false; if (!ptrs.size) gesture = null; return true; }
+for (const svg of [iso, ortoSvg]){
+  svg.addEventListener('wheel', e => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault(); const p = svgPoint(svg, e.clientX, e.clientY); zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, p.x, p.y);
+  }, { passive:false });
+  svg.addEventListener('pointercancel', e => { gestureUp(e); state.down = null; state.erasing = false; });
+}
+
+/* ===================== Perspectiva ampliada ===================== */
+$('#perspBig').onclick = () => {
+  const svg = $('#perspBigSvg'); svg.innerHTML = '';
+  const pics = [{ m:state.model, edges:state.sol.edges, cap:'Perspectiva isométrica' }];
+  if (state.sol.orto === 'FR' && state.rear) pics.push({ m:state.rear.m, edges:state.rear.edges, cap:'Vista de trás (peça girada 180°)' });
+  const Wv = 800; let x = 0, hMax = 0;
+  const each = pics.length > 1 ? Wv / 2 - 20 : Wv;
+  pics.forEach(pc => {
+    const pic = isoPicture(pc.m, pc.edges, each, 560);
+    const t = el('text', { x, y:16, class:'vlab', style:'font-size:15px' }, svg); t.textContent = pc.cap;
+    const g = el('g', { transform:`translate(${(x + (each - pic.w) / 2).toFixed(1)},28)` }, svg);
+    el('image', { href:pic.href, x:0, y:0, width:pic.w, height:pic.h, preserveAspectRatio:'none' }, g);
+    if (state.faceGrid) pic.grid.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-grid' }, g));
+    pic.lines.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-edge', style:'stroke-width:2' }, g));
+    hMax = Math.max(hMax, pic.h); x += each + 40;
+  });
+  svg.setAttribute('viewBox', `0 0 ${Wv + (pics.length > 1 ? 40 : 0)} ${hMax + 36}`);
+  $('#perspTitle').textContent = 'Perspectiva da peça: ' + state.ex.nome;
+  $('#perspDlg').showModal();
+};
+$('#perspClose').onclick = () => $('#perspDlg').close();
+
+/* ===================== Painel do professor ===================== */
+async function copyText(text, okMsg){
+  try { await navigator.clipboard.writeText(text); toast(okMsg); return; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  const host = document.querySelector('dialog[open]') || document.body; host.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove(); toast(ok ? okMsg : 'Não foi possível copiar automaticamente. Selecione o texto e copie com Ctrl+C.');
+}
+function profTab(t){
+  for (const [b, sec] of [['ptabLink', 'pLink'], ['ptabEd', 'pEd'], ['ptabVer', 'pVer']]){ $('#' + b).setAttribute('aria-selected', b === t); $('#' + sec).hidden = b !== t; }
+  if (t === 'ptabEd') edRender();
+}
+$('#ptabLink').onclick = () => profTab('ptabLink');
+$('#ptabEd').onclick = () => profTab('ptabEd');
+$('#ptabVer').onclick = () => profTab('ptabVer');
+function openProf(){
+  const dlg = $('#profDlg');
+  if (!$('#lkBase').value){
+    const here = location.protocol.startsWith('http') && !/claude\.ai|claudeusercontent/.test(location.host) ? location.origin + location.pathname : '';
+    $('#lkBase').value = here || 'https://santosjp10.github.io/Perspectiva/';
+  }
+  lkBuildList(); lkUpdate(); edFillLoad();
+  if (!dlg.open) dlg.showModal();
+}
+$('#profLink').onclick = e => { e.preventDefault(); openProf(); };
+$('#profClose').onclick = () => { $('#profDlg').close(); };
+$('#profDlg').addEventListener('close', () => { if (location.hash === '#professor') location.hash = hashFor(state.mode).slice(1) ? hashFor(state.mode) : ''; });
+
+/* ---------- link de atividade ---------- */
+const lkSel = new Set();
+function lkMode(){ return document.querySelector('input[name="lkMode"]:checked').value; }
+function lkBuildList(){
+  const box = $('#lkList'); box.innerHTML = ''; const md = lkMode();
+  if (!lkSel.size && !box.dataset.init){ EXERCISES.forEach(e => { if (!state.lista || state.lista.includes(e.id)) lkSel.add(e.id); }); box.dataset.init = '1'; }
+  const groups = [...new Set(EXERCISES.map(e => e.grupo))];
+  for (const g of groups){
+    const h = document.createElement('h4'); const gb = document.createElement('input'); gb.type = 'checkbox';
+    const its = EXERCISES.map((e, i) => [e, i]).filter(([e]) => e.grupo === g);
+    const avail = its.filter(([e]) => !(md === 'orto' && ORTO[e.id] === 'X'));
+    gb.checked = avail.length && avail.every(([e]) => lkSel.has(e.id));
+    gb.onchange = () => { avail.forEach(([e]) => gb.checked ? lkSel.add(e.id) : lkSel.delete(e.id)); lkBuildList(); lkUpdate(); };
+    h.appendChild(gb); h.appendChild(document.createTextNode(g)); box.appendChild(h);
+    for (const [e, i] of its){
+      const lab = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox';
+      const dis = md === 'orto' && ORTO[e.id] === 'X';
+      cb.checked = lkSel.has(e.id) && !dis; cb.disabled = dis; if (dis) lab.className = 'dis';
+      cb.onchange = () => { cb.checked ? lkSel.add(e.id) : lkSel.delete(e.id); lkUpdate(); };
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(` ${i + 1}. ${e.nome}${dis ? ' (só no modo 1)' : ''}`)); box.appendChild(lab);
+    }
+  }
+}
+function lkUpdate(){
+  const md = lkMode(), aval = $('#lkAval').checked;
+  const ids = EXERCISES.filter(e => lkSel.has(e.id) && !(md === 'orto' && ORTO[e.id] === 'X')).map(e => e.id);
+  const all = ids.length === EXERCISES.filter(e => !(md === 'orto' && ORTO[e.id] === 'X')).length;
+  const hash = [aval ? 'avaliacao' : '', md === 'orto' ? 'vistas' : 'perspectiva', !all && ids.length ? 'lista-' + ids.join('-') : ''].filter(Boolean).join('-');
+  let base = $('#lkBase').value.trim().replace(/#.*$/, '');
+  $('#lkOut').value = base + '#' + hash;
+  $('#lkCount').textContent = `(${ids.length} selecionada${ids.length === 1 ? '' : 's'})`;
+  $('#lkInfo').textContent = !ids.length ? 'Selecione pelo menos uma peça.' : all ? 'Todas as peças disponíveis: o link não restringe a lista.' : `O link restringe a atividade a ${ids.length} peça${ids.length > 1 ? 's' : ''}. Se você mudar os ids das peças em exercicios.js, gere o link de novo.`;
+  $('#lkCopy').disabled = !ids.length; $('#lkTry').disabled = !ids.length;
+  $('#lkOut').dataset.hash = '#' + hash;
+}
+document.querySelectorAll('input[name="lkMode"]').forEach(r => r.onchange = () => { lkBuildList(); lkUpdate(); });
+$('#lkAval').onchange = lkUpdate; $('#lkBase').oninput = lkUpdate;
+$('#lkAll').onclick = () => { EXERCISES.forEach(e => lkSel.add(e.id)); lkBuildList(); lkUpdate(); };
+$('#lkNone').onclick = () => { lkSel.clear(); lkBuildList(); lkUpdate(); };
+$('#lkCopy').onclick = () => copyText($('#lkOut').value, 'Link copiado. Envie aos alunos.');
+$('#lkTry').onclick = () => { const h = $('#lkOut').dataset.hash; $('#profDlg').close(); location.hash = h; };
+
+/* ---------- editor de peças ---------- */
+const ED = { W:3, D:2, H:2, z:0, vox:null, mode:'vox', code:null, timer:null };
+function edVoxInit(keep){
+  const old = ED.vox; ED.vox = [];
+  for (let z = 0; z < ED.H; z++){ ED.vox[z] = []; for (let y = 0; y < ED.D; y++){ ED.vox[z][y] = []; for (let x = 0; x < ED.W; x++) ED.vox[z][y][x] = keep && old && old[z] && old[z][y] ? !!old[z][y][x] : false; } }
+  ED.z = Math.min(ED.z, ED.H - 1);
+}
+function edLayers(){ const L = []; for (let z = 0; z < ED.H; z++){ const rows = []; for (let r = 0; r < ED.D; r++){ const y = ED.D - 1 - r; let t = ''; for (let x = 0; x < ED.W; x++) t += ED.vox[z][y][x] ? '#' : '.'; rows.push(t); } L.push(rows); } return L; }
+function edSlug(t){ return (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '').slice(0, 16).toLowerCase(); }
+function edDef(){
+  const sl = edSlug($('#edNome').value);
+  const base = { id: $('#edId').value.trim() || (sl ? 'n' + sl : 'nova'), grupo: $('#edGrupo').value.trim() || 'Peças novas', nome: $('#edNome').value.trim() || 'Peça nova', nivel: $('#edNivel').value };
+  if (ED.mode === 'vox') return Object.assign(base, { layers: edLayers() });
+  return Object.assign(base, ED.code || {});
+}
+function edGridRender(){
+  const g = $('#edGrid'); g.innerHTML = ''; g.style.gridTemplateColumns = `repeat(${ED.W}, 30px)`;
+  for (let r = 0; r < ED.D; r++){ const y = ED.D - 1 - r; for (let x = 0; x < ED.W; x++){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'edcell' + (ED.vox[ED.z][y][x] ? ' on' : '') + (ED.z > 0 && ED.vox[ED.z - 1][y][x] ? ' below' : '');
+    b.title = `x=${x}, y=${y}, z=${ED.z}`; b.onclick = () => { ED.vox[ED.z][y][x] = !ED.vox[ED.z][y][x]; edRender(); };
+    g.appendChild(b);
+  } }
+  const lb = $('#edLayers'); lb.innerHTML = '';
+  for (let z = 0; z < ED.H; z++){ const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = z + 1; b.setAttribute('aria-pressed', z === ED.z); b.title = z === 0 ? 'Camada de baixo' : `Camada ${z + 1}`; b.onclick = () => { ED.z = z; edGridRender(); }; lb.appendChild(b); }
+}
+function edRender(){
+  if (ED.mode === 'vox'){ edGridRender(); $('#edJson').value = JSON.stringify(edDef(), null, 1); }
+  clearTimeout(ED.timer); ED.timer = setTimeout(edPreview, 200);
+}
+function edPreview(){
+  const msgs = []; const ul = $('#edMsgs'); const iv = $('#edIso'), vv = $('#edViews'); iv.innerHTML = ''; vv.innerHTML = '';
+  const def = edDef();
+  if (!/^[A-Za-z0-9]+$/.test(def.id)) msgs.push(['bad', 'O id deve ter só letras e números, sem espaços, acentos ou hífens.']);
+  const dup = EXERCISES.find(e => e.id === def.id);
+  if (dup) msgs.push(['warn', `Já existe uma peça com o id "${def.id}" (${dup.nome}). Ao colar o código, substitua a peça antiga ou use outro id.`]);
+  let m, sol;
+  try { m = buildModel(def); if (!m.edges.length) throw new Error('A peça está vazia: coloque pelo menos um bloco.'); sol = solve(m); }
+  catch (err){ msgs.push(['bad', err.message.startsWith('A peça') ? err.message : 'Geometria inválida: ' + err.message]); ul.innerHTML = msgs.map(([c, t]) => `<li class="${c}">${esc(t)}</li>`).join(''); ED.ok = false; return; }
+  const pic = isoPicture(m, sol.edges, 420, 260);
+  iv.setAttribute('viewBox', `0 0 ${pic.w + 20} ${pic.h + 20}`);
+  const g = el('g', { transform:'translate(10,10)' }, iv);
+  el('image', { href:pic.href, x:0, y:0, width:pic.w, height:pic.h, preserveAspectRatio:'none' }, g);
+  pic.grid.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-grid' }, g));
+  pic.lines.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-edge' }, g));
+  renderViews(m, sol, def, vv);
+  if (sol.mixed) msgs.push(['warn', 'Algumas arestas visíveis terminam fora dos nós da malha isométrica. A correção do modo 1 pode ficar imprecisa: ajuste as medidas ou a inclinação.']);
+  const dang = graphInfo(sol.edges).dangling.length; if (dang) msgs.push(['warn', `${dang} extremidade(s) solta(s) no gabarito: confira se os sólidos se tocam corretamente.`]);
+  msgs.push(sol.orto === 'X' ? ['warn', 'Modo 2: indisponível (há arestas internas que nenhuma perspectiva mostra). A peça fica só no modo 1.']
+    : ['good', sol.orto === 'FR' ? 'Modo 2: disponível, com a vista de trás.' : 'Modo 2: disponível só com a perspectiva frontal.']);
+  msgs.push(['good', `Dimensões: ${m.W} × ${m.D} × ${m.H} módulos (largura × profundidade × altura).`]);
+  ul.innerHTML = msgs.map(([c, t]) => `<li class="${c}">${esc(t)}</li>`).join('');
+  ED.ok = !msgs.some(([c]) => c === 'bad');
+}
+function edSetMode(md){ ED.mode = md; $('#edTabVox').setAttribute('aria-selected', md === 'vox'); $('#edTabCode').setAttribute('aria-selected', md === 'code'); $('#edVox').hidden = md !== 'vox'; $('#edCode').hidden = md !== 'code'; }
+$('#edTabVox').onclick = () => {
+  if (ED.mode === 'code'){ const d = edDef(); if (!d.layers){ toast('Esta peça usa prims (código avançado) e não pode ser editada por camadas.'); return; } edFromLayers(d.layers); }
+  edSetMode('vox'); edRender();
+};
+$('#edTabCode').onclick = () => { if (ED.mode === 'vox'){ const d = edDef(); ED.code = { layers:d.layers }; } $('#edJson').value = JSON.stringify(edDef(), null, 1); edSetMode('code'); edRender(); };
+function edFromLayers(L){
+  ED.H = L.length; ED.D = L[0].length; ED.W = Math.max(...L.flat().map(r => r.length)); ED.z = 0; edVoxInit(false);
+  L.forEach((rows, z) => rows.forEach((r, ri) => { const y = ED.D - 1 - ri; for (let x = 0; x < r.length; x++) ED.vox[z][y][x] = r[x] === '#'; }));
+  $('#edW').value = ED.W; $('#edD').value = ED.D; $('#edH').value = ED.H;
+}
+for (const [id, k] of [['edW', 'W'], ['edD', 'D'], ['edH', 'H']]) $('#' + id).addEventListener('change', () => { const v = Math.max(1, Math.min(8, Math.round(+$('#' + id).value) || 1)); $('#' + id).value = v; if (v === ED[k]) return; ED[k] = v; edVoxInit(true); edRender(); });
+$('#edFill').onclick = () => { ED.vox[ED.z].forEach(r => r.fill(true)); edRender(); };
+$('#edClear').onclick = () => { ED.vox[ED.z].forEach(r => r.fill(false)); edRender(); };
+$('#edCopyDown').onclick = () => { if (ED.z > 0){ ED.vox[ED.z] = ED.vox[ED.z - 1].map(r => r.slice()); edRender(); } };
+for (const id of ['edNome', 'edId', 'edGrupo', 'edNivel']) $('#' + id).addEventListener('input', () => { if (ED.mode === 'code'){ $('#edJson').value = JSON.stringify(edDef(), null, 1); } edRender(); });
+$('#edApply').onclick = () => {
+  let d; try { d = JSON.parse($('#edJson').value); } catch (err){ toast('O código não é um JSON válido: confira vírgulas, aspas e colchetes.'); return; }
+  ED.code = {}; if (d.layers) ED.code.layers = d.layers; if (d.prims) ED.code.prims = d.prims; if (d.centros) ED.code.centros = d.centros;
+  if (d.nome) $('#edNome').value = d.nome; if (d.id) $('#edId').value = d.id; if (d.grupo) $('#edGrupo').value = d.grupo; if (d.nivel) $('#edNivel').value = d.nivel;
+  edRender();
+};
+$('#edNew').onclick = () => { $('#edNome').value = ''; $('#edId').value = ''; ED.W = 3; ED.D = 2; ED.H = 2; $('#edW').value = 3; $('#edD').value = 2; $('#edH').value = 2; edVoxInit(false); ED.vox[0].forEach(r => r.fill(true)); edSetMode('vox'); edRender(); };
+function edFillLoad(){
+  const sel = $('#edLoad'); sel.innerHTML = '<option value="">Carregar peça existente…</option>' + EXERCISES.map((e, i) => `<option value="${i}">${i + 1}. ${esc(e.nome)}</option>`).join('');
+  $('#edGrupos').innerHTML = [...new Set(EXERCISES.map(e => e.grupo))].map(g => `<option value="${esc(g)}">`).join('');
+  if (!ED.vox){ edVoxInit(false); ED.vox[0].forEach(r => r.fill(true)); }
+}
+$('#edLoad').onchange = () => {
+  const i = +$('#edLoad').value; if (!$('#edLoad').value) return; const e = EXERCISES[i];
+  $('#edNome').value = e.nome; $('#edId').value = e.id; $('#edGrupo').value = e.grupo; $('#edNivel').value = e.nivel;
+  if (e.layers && !e.prims){ edFromLayers(e.layers); edSetMode('vox'); }
+  else { ED.code = {}; if (e.layers) ED.code.layers = e.layers; if (e.prims) ED.code.prims = e.prims; if (e.centros) ED.code.centros = e.centros; edSetMode('code'); $('#edJson').value = JSON.stringify(edDef(), null, 1); }
+  edRender(); $('#edLoad').value = '';
+};
+function edCodeText(d){
+  const q = v => JSON.stringify(v);
+  const parts = [`id:${q(d.id)}`, `grupo:${q(d.grupo)}`, `nome:${q(d.nome)}`, `nivel:${q(d.nivel)}`];
+  if (d.layers) parts.push(`layers:${q(d.layers)}`); if (d.prims) parts.push(`prims:${q(d.prims)}`); if (d.centros) parts.push(`centros:${q(d.centros)}`);
+  return ` {${parts.join(',')}},`;
+}
+$('#edCopy').onclick = () => { edPreview(); if (!ED.ok){ toast('Corrija os erros indicados antes de copiar.'); return; } copyText(edCodeText(edDef()), 'Código da peça copiado. Cole-o na lista do arquivo exercicios.js.'); };
+$('#edTest').onclick = () => {
+  edPreview(); if (!ED.ok){ toast('Corrija os erros indicados antes de testar.'); return; }
+  const d = edDef(); const ex = Object.assign({}, d, { id:'rndEditor', nome:'Teste: ' + d.nome });
+  $('#profDlg').close(); loadExercise(ex, -1);
+  toast('Peça em teste aberta. As tentativas com ela não entram nas notas.');
+};
+
+/* ---------- verificação de todas as peças ---------- */
+$('#verRun').onclick = () => {
+  const tb = $('#verTable'); const rows = []; let i = 0, problems = 0; const t0 = performance.now();
+  $('#verRun').disabled = true;
+  const head = '<thead><tr><th>Nº</th><th>Peça</th><th>Dimensões</th><th>Modo 2</th><th>Tempo</th><th>Situação</th></tr></thead>';
+  const bad = BAD_EXERCISES.map(t => `<tr><td>—</td><td colspan="4">${esc(t)}</td><td style="color:var(--bad)">Ignorada</td></tr>`);
+  const step = () => {
+    const tt = performance.now();
+    while (i < EXERCISES.length && performance.now() - tt < 60){
+      const e = EXERCISES[i], ts = performance.now(); let dims = '—', m2 = '—', sit = [];
+      try {
+        const m = buildModel(e), sol = solve(m); dims = `${m.W}×${m.D}×${m.H}`;
+        m2 = sol.orto === 'X' ? 'só modo 1' : sol.orto === 'FR' ? 'com vista de trás' : 'sim';
+        const segs = maximal(sol.edges).map(sg => { const f = pe(sg.units[0]), l = pe(sg.units[sg.units.length - 1]); return { a:[f[0], f[1]], b:[l[2], l[3]] }; });
+        const U = unitEdges(segs); if (U.size !== sol.edges.size || countIn(U, sol.edges) !== U.size) sit.push('gabarito não se reconstrói');
+        if (sol.mixed) sit.push('arestas fora dos nós da malha');
+        const dg = graphInfo(sol.edges).dangling.length; if (dg) sit.push(`${dg} extremidade(s) solta(s)`);
+      } catch (err){ sit.push('erro: ' + err.message); }
+      if (sit.length) problems++;
+      rows.push(`<tr><td>${i + 1}</td><td>${esc(e.nome)}</td><td>${dims}</td><td>${m2}</td><td>${Math.round(performance.now() - ts)} ms</td><td style="color:${sit.length ? 'var(--bad)' : 'var(--ok)'}">${sit.length ? esc(sit.join('; ')) : 'OK'}</td></tr>`);
+      i++;
+    }
+    $('#verStatus').textContent = `Verificando… ${i} de ${EXERCISES.length}`;
+    tb.innerHTML = head + '<tbody>' + bad.join('') + rows.join('') + '</tbody>';
+    if (i < EXERCISES.length) setTimeout(step, 10);
+    else { $('#verRun').disabled = false; $('#verStatus').textContent = `Concluído em ${(Math.round(performance.now() - t0) / 1000).toFixed(1)} s: ${EXERCISES.length - problems} peça(s) OK, ${problems} com problema${BAD_EXERCISES.length ? `, ${BAD_EXERCISES.length} ignorada(s) por erro de cadastro` : ''}.`; }
+  };
+  step();
+};
 
 /* ===================== Relatório ===================== */
 let downloadsApi = null, downloadsState = 'pending';
@@ -1634,15 +2040,16 @@ function ensureJsPdf(){
 const modesOf = st => ['iso', 'orto'].filter(md => st.history.some(h => modeOf(h) === md));
 function csvText(st){
   const q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const lines = [['Aluno', st.name], ['Emitido em', fmtDate(Date.now())]];
+  const lines = [['Aluno', st.name], ['Emitido em', fmtDate(Date.now())], ['Versão do aplicativo', APP_VERSION]];
+  if (state.lista) lines.push(['Atividade (lista de peças)', state.lista.join(', ')]);
   for (const md of modesOf(st)){
     const sm = summary(st, md);
     lines.push([], [MODE_TITLE[md]], ['Nota geral', sm.overall], ['Média dos realizados', sm.done ? sm.avgDone : ''], ['Exercícios realizados', `${sm.done} de ${sm.total}`], [],
-      ['Nº', 'Exercício', 'Grupo', 'Nível', 'Tentativas', 'Melhor nota', 'Última nota', 'Conceito']);
-    sm.rows.forEach(r => lines.push([r.n, r.ex.nome, r.ex.grupo, r.ex.nivel, r.attempts, r.best ?? '', r.last ?? '', r.best != null ? gradeOf(r.best)[0] : 'Não realizado']));
+      ['Nº', 'Exercício', 'Grupo', 'Nível', 'Tentativas', 'Nota da 1ª tentativa', 'Melhor nota', 'Última nota', 'Tentativas com gabarito consultado', 'Melhor nota em modo avaliação', 'Avaliações usadas', 'Conceito']);
+    sm.rows.forEach(r => lines.push([r.n, r.ex.nome, r.ex.grupo, r.ex.nivel, r.attempts, r.first ?? '', r.best ?? '', r.last ?? '', r.gab, r.avalBest ?? '', r.avalN, r.best != null ? gradeOf(r.best)[0] : 'Não realizado']));
   }
-  lines.push([], ['Histórico de tentativas'], ['Data e hora', 'Modo', 'Exercício', 'Nota', 'Critério 1', 'Critério 2', 'Critério 3', 'Critério 4', 'Critério 5']);
-  st.history.forEach(h => lines.push([fmtDate(h.ts), modeOf(h) === 'orto' ? 'Modo 2' : 'Modo 1', h.nome, h.score, ...h.c.map(v => Math.round(v * 100) + '%')]));
+  lines.push([], ['Histórico de tentativas'], ['Data e hora', 'Modo', 'Exercício', 'Tentativa nº', 'Modo avaliação', 'Gabarito consultado', 'Nota', 'Critério 1', 'Critério 2', 'Critério 3', 'Critério 4', 'Critério 5']);
+  st.history.forEach(h => lines.push([fmtDate(h.ts), modeOf(h) === 'orto' ? 'Modo 2' : 'Modo 1', h.nome, h.tent ?? '', h.aval ? 'sim' : 'não', h.gab ? 'sim' : 'não', h.score, ...h.c.map(v => Math.round(v * 100) + '%')]));
   lines.push([], ['Critérios do modo 1', ...CRIT_LABELS.iso], ['Critérios do modo 2', ...CRIT_LABELS.orto]);
   return lines.map(l => l.map(q).join(';')).join('\r\n');
 }
@@ -1668,18 +2075,19 @@ function reportHtml(st){
     <h3>Melhor nota por exercício</h3>
     <svg viewBox="0 0 640 170" class="rep-chart" role="img" aria-label="Melhor nota por exercício">${grid}${bars}</svg>
     <h3>Exercícios</h3>
-    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Nº</th><th>Exercício</th><th>Nível</th><th>Tentativas</th><th>Melhor</th><th>Última</th><th>Conceito</th></tr></thead><tbody>
-    ${sm.rows.map(r => `<tr><td>${r.n}</td><td>${esc(r.ex.nome)}</td><td>${r.ex.nivel}</td><td>${r.attempts}</td><td>${r.best ?? '—'}</td><td>${r.last ?? '—'}</td><td style="color:${r.best != null ? gradeOf(r.best)[1] : 'var(--muted)'}">${r.best != null ? gradeOf(r.best)[0] : 'Não realizado'}</td></tr>`).join('')}
+    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Nº</th><th>Exercício</th><th>Tentativas</th><th>1ª tentativa</th><th>Melhor</th><th>Gabarito</th><th>Avaliação</th><th>Conceito</th></tr></thead><tbody>
+    ${sm.rows.map(r => `<tr><td>${r.n}</td><td>${esc(r.ex.nome)}</td><td>${r.attempts}</td><td>${r.first ?? '—'}</td><td>${r.best ?? '—'}</td><td>${r.gab ? r.gab + '×' : '—'}</td><td>${r.avalBest != null ? r.avalBest + ` (${r.avalN}/${MAX_AVAL})` : '—'}</td><td style="color:${r.best != null ? gradeOf(r.best)[1] : 'var(--muted)'}">${r.best != null ? gradeOf(r.best)[0] : 'Não realizado'}</td></tr>`).join('')}
     </tbody></table></div>`;
   }).join('');
   return `
     <p class="rep-k" style="margin:0 0 10px">Desenho Técnico, Agronomia, UFT, Câmpus Universitário de Gurupi. Professor responsável: Jacinto Pereira Santos.</p>
-    <div class="rep-top"><div><div class="rep-k">Aluno(a)</div><div class="rep-name">${esc(st.name)}</div></div><div class="rep-k">Emitido em ${fmtDate(Date.now())}</div></div>
-    <p class="note">Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis; os não realizados contam como zero.</p>
+    <div class="rep-top"><div><div class="rep-k">Aluno(a)</div><div class="rep-name">${esc(st.name)}</div></div><div class="rep-k">Emitido em ${fmtDate(Date.now())}<br>Código de verificação: ${fileCode(st.name, st.history)}</div></div>
+    ${st.alterado ? '<div class="stale" style="margin-top:8px">Atenção: um arquivo de progresso deste aluno foi aberto com código de verificação que não confere.</div>' : ''}
+    <p class="note">Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis${state.lista ? ` da atividade (${state.lista.length} peças)` : ''}; os não realizados contam como zero.</p>
     ${sections}
     <h3>Histórico de tentativas</h3>
-    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Data e hora</th><th>Modo</th><th>Exercício</th><th>Nota</th></tr></thead><tbody>
-    ${st.history.map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${modeOf(h) === 'orto' ? '2' : '1'}</td><td>${esc(h.nome)}</td><td style="color:${gradeOf(h.score)[1]};font-weight:600">${h.score}</td></tr>`).join('')}
+    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Data e hora</th><th>Modo</th><th>Exercício</th><th>Tentativa</th><th>Observação</th><th>Nota</th></tr></thead><tbody>
+    ${st.history.map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${modeOf(h) === 'orto' ? '2' : '1'}</td><td>${esc(h.nome)}</td><td>${h.tent ?? '—'}</td><td>${[h.aval ? 'avaliação' : '', h.gab ? 'gabarito consultado' : ''].filter(Boolean).join(', ') || '—'}</td><td style="color:${gradeOf(h.score)[1]};font-weight:600">${h.score}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
 function openReport(){
@@ -1713,9 +2121,12 @@ function buildPdf(st){
   txt('Professor responsável: Jacinto Pereira Santos', M, y); y += 9;
   doc.setTextColor(35,41,47); doc.setFontSize(11);
   doc.setFont('helvetica','bold'); txt('Aluno(a):', M, y); doc.setFont('helvetica','normal'); txt(st.name, M + 20, y);
-  doc.setFont('helvetica','bold'); txt('Emitido em:', 120, y); doc.setFont('helvetica','normal'); txt(fmtDate(Date.now()), 143, y); y += 8;
+  doc.setFont('helvetica','bold'); txt('Emitido em:', 120, y); doc.setFont('helvetica','normal'); txt(fmtDate(Date.now()), 143, y); y += 5;
+  doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt(`Código de verificação: ${fileCode(st.name, st.history)}`, 120, y);
+  if (st.alterado){ doc.setTextColor(201,42,42); txt('Atenção: arquivo de progresso com código que não confere.', M, y); }
+  y += 6;
   doc.setFontSize(8.5); doc.setTextColor(95,106,114);
-  txt('Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis; os não realizados contam como zero.', M, y); y += 7;
+  txt(state.lista ? `Atividade com ${state.lista.length} peças: a nota geral é a média das melhores notas nessas peças; as não realizadas contam como zero.` : 'Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis; os não realizados contam como zero.', M, y); y += 7;
 
   modesOf(st).forEach((md, mi) => {
     const sm = summary(st, md);
@@ -1729,7 +2140,7 @@ function buildPdf(st){
     doc.setFont('helvetica','bold'); doc.setFontSize(28); doc.setTextColor(...gc); txt(String(sm.overall), M + 8, y + 17);
     doc.setFontSize(11); txt(gName, M + 8, y + 25);
     doc.setFontSize(9); doc.setTextColor(95,106,114); doc.setFont('helvetica','normal'); txt('Nota geral (0 a 100)', M + 32, y + 9);
-    const stats = [['Exercícios realizados', `${sm.done} de ${sm.total}`], ['Média dos realizados', sm.done ? String(sm.avgDone) : '-'], ['Com nota 60 ou mais', String(sm.passed)], ['Tentativas avaliadas', String(sm.attempts)]];
+    const stats = [['Exercícios realizados', `${sm.done} de ${sm.total}`], ['Média dos realizados', sm.done ? String(sm.avgDone) : '-'], ['Modo avaliação', sm.avalDone ? `${sm.avalDone} peça(s), média ${sm.avalAvg}` : '-'], ['Tentativas avaliadas', String(sm.attempts)]];
     stats.forEach(([k, v], i) => { const x = M + 72 + (i % 2) * 52, yy = y + 10 + Math.floor(i / 2) * 11; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt(k, x, yy); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(35,41,47); txt(v, x, yy + 5); });
     y += 38;
 
@@ -1750,7 +2161,7 @@ function buildPdf(st){
     // tabela
     ensure(20);
     doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Exercícios', M, y); y += 5;
-    const cols = [[M, 'Nº'], [M + 9, 'Exercício'], [M + 82, 'Nível'], [M + 104, 'Tentativas'], [M + 126, 'Melhor'], [M + 144, 'Última'], [M + 160, 'Conceito']];
+    const cols = [[M, 'Nº'], [M + 9, 'Exercício'], [M + 74, 'Tent.'], [M + 87, '1ª tent.'], [M + 103, 'Melhor'], [M + 118, 'Gabarito'], [M + 135, 'Avaliação'], [M + 156, 'Conceito']];
     const header = () => { doc.setFillColor(221,232,242); doc.rect(M, y - 4, W - 2*M, 6, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,41,47); cols.forEach(([x, t]) => txt(t, x + 1, y)); y += 6; };
     header();
     let lastGroup = '';
@@ -1758,10 +2169,11 @@ function buildPdf(st){
       if (y + 6 > 297 - M){ doc.addPage(); y = M + 4; header(); }
       if (r.ex.grupo !== lastGroup){ lastGroup = r.ex.grupo; doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(95,106,114); txt(r.ex.grupo, M + 1, y); y += 5; }
       doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(35,41,47);
-      txt(String(r.n), M + 1, y); txt(r.ex.nome.length > 42 ? r.ex.nome.slice(0, 41) + '…' : r.ex.nome, M + 10, y); txt(r.ex.nivel, M + 83, y); txt(String(r.attempts), M + 105, y);
-      txt(r.best != null ? String(r.best) : '-', M + 127, y); txt(r.last != null ? String(r.last) : '-', M + 145, y);
-      if (r.best != null){ doc.setTextColor(...GRC(r.best)); txt(gradeOf(r.best)[0], M + 161, y); }
-      else { doc.setTextColor(150,150,150); txt('Não realizado', M + 161, y); }
+      txt(String(r.n), M + 1, y); txt(r.ex.nome.length > 36 ? r.ex.nome.slice(0, 35) + '…' : r.ex.nome, M + 10, y); txt(String(r.attempts), M + 75, y);
+      txt(r.first != null ? String(r.first) : '-', M + 88, y); txt(r.best != null ? String(r.best) : '-', M + 104, y);
+      txt(r.gab ? `${r.gab}x` : '-', M + 119, y); txt(r.avalBest != null ? `${r.avalBest} (${r.avalN}/${MAX_AVAL})` : '-', M + 136, y);
+      if (r.best != null){ doc.setTextColor(...GRC(r.best)); txt(gradeOf(r.best)[0], M + 157, y); }
+      else { doc.setTextColor(150,150,150); txt('Não realizado', M + 157, y); }
       doc.setDrawColor(225,229,228); doc.line(M, y + 1.8, W - M, y + 1.8); y += 5.6;
     });
     y += 4;
@@ -1790,11 +2202,13 @@ function buildPdf(st){
     doc.setFont('helvetica','normal'); doc.setTextColor(95,106,114); txt(fmtDate(h.ts), M, y);
     txt(modeOf(h) === 'orto' ? 'Modo 2' : 'Modo 1', M + 28, y);
     doc.setTextColor(35,41,47); txt(`${i + 1}. ${h.nome}`, M + 44, y);
+    const obs = [h.tent ? `tentativa ${h.tent}` : '', h.aval ? 'avaliação' : '', h.gab ? 'gabarito consultado' : ''].filter(Boolean).join(', ');
+    if (obs){ doc.setTextColor(95,106,114); txt(obs, M + 118, y); }
     doc.setFont('helvetica','bold'); doc.setTextColor(...GRC(h.score)); txt(String(h.score), W - M, y, { align:'right' });
     y += 4.8;
   });
   const n = doc.getNumberOfPages();
-  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); txt(`${latin(st.name)} - página ${i} de ${n}`, W - M, 290, { align:'right' }); txt('Isométrica - perspectiva e vistas ortográficas', M, 290); }
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); txt(`${latin(st.name)} - página ${i} de ${n}`, W - M, 290, { align:'right' }); txt(`Isométrica v${APP_VERSION} - perspectiva e vistas ortográficas`, M, 290); }
   return doc.output('blob');
 }
 $('#expPdf').onclick = async () => {
@@ -1814,6 +2228,45 @@ $('#viewRep').onclick = openReport;
 $('#repClose').onclick = () => { const d = $('#repDlg'); if (d.close) d.close(); else d.removeAttribute('open'); };
 $('#repCopy').onclick = copyCsv;
 $('#repPdf').onclick = () => $('#expPdf').click();
+/* ---------- arquivo de progresso (.json) ---------- */
+function hashStr(str){ let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++){ const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase(); }
+const fileCode = (name, hist) => hashStr('isometrica|UFT-Gurupi|' + stuKey(name) + '|' + JSON.stringify(hist));
+function recomputeBest(st){
+  st.best = {}; st.bestV = {};
+  for (const h of st.history){ if (h.id === 'rnd') continue; const m = modeOf(h) === 'orto' ? st.bestV : st.best; if (m[h.id] == null || h.score > m[h.id]) m[h.id] = h.score; }
+}
+$('#saveProgBtn').onclick = async () => {
+  const st = getStudent(false); if (!st || !st.history.length){ toast('Avalie pelo menos um exercício antes de salvar o progresso.'); return; }
+  const data = { app:'isometrica', formato:1, versao:APP_VERSION, aluno:st.name, salvoEm:new Date().toISOString(), historico:st.history, codigo:fileCode(st.name, st.history) };
+  await saveFile(`progresso-isometrica-${slug(st.name)}.json`, JSON.stringify(data, null, 1), 'Progresso salvo');
+};
+$('#loadProgBtn').onclick = () => { $('#loadProgInput').value = ''; $('#loadProgInput').click(); };
+$('#loadProgInput').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  let data;
+  try { data = JSON.parse(await f.text()); } catch (err){ toast('Não foi possível ler o arquivo: ele não é um arquivo de progresso válido.'); return; }
+  if (!data || data.app !== 'isometrica' || !Array.isArray(data.historico) || !data.aluno){ toast('Este arquivo não é um arquivo de progresso do aplicativo Isométrica.'); return; }
+  const ok = data.codigo === fileCode(data.aluno, data.historico);
+  const k = stuKey(data.aluno);
+  const st = prog.students[k] || (prog.students[k] = { name:data.aluno, history:[], best:{} });
+  const seen = new Set(st.history.map(h => `${h.ts}|${h.id}|${modeOf(h)}|${h.score}`));
+  let added = 0;
+  for (const h of data.historico){
+    if (!h || typeof h.score !== 'number' || !h.id) continue;
+    const key = `${h.ts}|${h.id}|${modeOf(h)}|${h.score}`;
+    if (!seen.has(key)){ seen.add(key); st.history.push(h); added++; }
+  }
+  st.history.sort((a, b) => a.ts - b.ts);
+  if (!ok) st.alterado = true;
+  recomputeBest(st);
+  $('#stuName').value = st.name; prog.current = st.name; saveProg();
+  renderProgress(); refreshExMeta();
+  toast(ok ? `Progresso de ${st.name} aberto: ${added} tentativa(s) nova(s).` : `Atenção: o código de verificação não confere. O arquivo de ${st.name} pode ter sido alterado.`);
+});
 let resetArmed = null;
 $('#resetProg').onclick = () => {
   const st = getStudent(false); if (!st) return;
@@ -1854,24 +2307,31 @@ function randomExercise(){
 }
 function fillSelect(){
   const sel = $('#exSelect'); const st = getStudent(false);
-  const groups = [...new Set(EXERCISES.map(e => e.grupo))];
-  sel.innerHTML = groups.map(g => `<optgroup label="${esc(g)}">` + EXERCISES.map((e, i) => e.grupo !== g ? '' :
+  const groups = [...new Set(EXERCISES.filter(inList).map(e => e.grupo))];
+  sel.innerHTML = groups.map(g => `<optgroup label="${esc(g)}">` + EXERCISES.map((e, i) => e.grupo !== g || !inList(e) ? '' :
     (state.mode === 'orto' && ORTO[e.id] === 'X'
       ? `<option value="${i}" disabled>${i + 1}. ${esc(e.nome)} (só no modo 1)</option>`
       : `<option value="${i}">${i + 1}. ${esc(e.nome)}${bestMap(st, state.mode)[e.id] != null ? ` (${bestMap(st, state.mode)[e.id]})` : ''}</option>`)).join('') + '</optgroup>').join('')
-    + (state.ex && String(state.ex.id).startsWith('rnd') ? `<option value="-1">Peça aleatória</option>` : '');
+    + (state.ex && state.idx < 0 ? `<option value="-1">${esc(state.ex.nome)}</option>` : '');
   sel.value = String(state.idx);
 }
 function refreshExMeta(){
   $('#exLevel').textContent = state.ex.nivel;
   const st = getStudent(false); const b = bestMap(st, state.mode)[state.ex.id];
-  $('#exBest').textContent = b != null ? b : '—';
+  if (state.aval && !String(state.ex.id).startsWith('rnd')){
+    const n = attemptsFor(st, state.ex.id, state.mode, true);
+    $('#exBestLab').innerHTML = `Avaliações: <b id="exBest">${n} de ${MAX_AVAL}</b>`;
+    $('#evalBtn').disabled = n >= MAX_AVAL;
+  } else {
+    $('#exBestLab').innerHTML = `Melhor nota: <b id="exBest">${b != null ? b : '—'}</b>`;
+    $('#evalBtn').disabled = false;
+  }
   $('#cbTitle').textContent = state.ex.nome;
 }
 function nextAvailable(from, dir){
   for (let k = 1; k <= EXERCISES.length; k++){
     const j = ((from + dir * k) % EXERCISES.length + EXERCISES.length) % EXERCISES.length;
-    if (state.mode !== 'orto' || ORTO[EXERCISES[j].id] !== 'X') return j;
+    if ((state.mode !== 'orto' || ORTO[EXERCISES[j].id] !== 'X') && inList(EXERCISES[j])) return j;
   }
   return -1;
 }
@@ -1894,7 +2354,7 @@ function loadExercise(ex, idx, dir, hops){
   S = Math.max(24, Math.min(48, (VW * 0.6) / (uSpan * C), (VH * 0.6) / (tSpan / 2)));
   OX = VW / 2 - ((m.W - m.D) / 2) * C * S;
   OY = VH / 2 + (tSpan / 2) * S / 2;
-  oSetup(m);
+  oSetup(m); resetViews();
   drawings.iso = blankDrawing(); drawings.orto = blankDrawing();
   restoreDrawing(state.mode);
   state.showSolid = false; state.solidImg = null; state.rear = null; state.persp = null;
@@ -1903,19 +2363,42 @@ function loadExercise(ex, idx, dir, hops){
 $('#exSelect').onchange = e => { const i = +e.target.value; if (i >= 0) loadExercise(EXERCISES[i], i, 1); };
 $('#prevEx').onclick = () => { const i = state.idx < 0 ? EXERCISES.length - 1 : nextAvailable(state.idx, -1); if (i >= 0) loadExercise(EXERCISES[i], i, -1); };
 $('#nextEx').onclick = () => { const i = state.idx < 0 ? 0 : nextAvailable(state.idx, 1); if (i >= 0) loadExercise(EXERCISES[i], i, 1); };
-$('#randEx').onclick = () => loadExercise(randomExercise(), -1);
+$('#randEx').onclick = () => { if (!state.aval) loadExercise(randomExercise(), -1); };
 const mq = window.matchMedia('(prefers-color-scheme: dark)');
 if (mq.addEventListener) mq.addEventListener('change', () => { state.solidImg = null; state.persp = null; renderSolid(); renderLeft(); });
 
 if (prog.current) $('#stuName').value = prog.current;
 updateExportNote();
-state.mode = location.hash === '#vistas' ? 'orto' : 'iso';
-applyModeUI();
-loadExercise(EXERCISES[0], 0, 1);
+for (let i = EXERCISES.length - 1; i >= 0; i--){
+  const e = EXERCISES[i];
+  try { const m = buildModel(e); if (!m.edges.length) throw new Error('peça vazia'); }
+  catch (err){ BAD_EXERCISES.push(`${e.nome || e.id}: geometria inválida (${err.message})`); EXERCISES.splice(i, 1); }
+}
+$('#appVer').textContent = APP_VERSION;
+if (BAD_EXERCISES.length){
+  const w = $('#exWarn'); w.hidden = false;
+  w.innerHTML = `<b>${BAD_EXERCISES.length} peça${BAD_EXERCISES.length > 1 ? 's' : ''} com erro de cadastro ${BAD_EXERCISES.length > 1 ? 'foram' : 'foi'} ignorada${BAD_EXERCISES.length > 1 ? 's' : ''}.</b> ${BAD_EXERCISES.map(esc).join(' ')}`;
+}
+if (!EXERCISES.length){
+  $('#board').innerHTML = '<div class="panel" style="margin:16px"><h2>Não foi possível carregar as peças</h2><p>O arquivo <code>exercicios.js</code> não foi encontrado ou tem um erro de digitação (vírgula, aspas ou colchete). Confira o arquivo ou volte à versão anterior.</p></div>';
+  throw new Error('Nenhuma peça carregada');
+}
+{ const ph = parseHash(); state.mode = ph.mode; state.aval = ph.aval; state.lista = ph.lista; }
+applyModeUI(); applyAvalUI(); applyListUI();
+{ const first = Math.max(0, EXERCISES.findIndex(inList)); loadExercise(EXERCISES[first], first, 1); }
 modeApplied = true;
+if (parseHash().prof) setTimeout(openProf, 300);
 $('#modeIso').onclick = () => setMode('iso');
 $('#modeOrto').onclick = () => setMode('orto');
-window.addEventListener('hashchange', () => setMode(location.hash === '#vistas' ? 'orto' : 'iso'));
+window.addEventListener('hashchange', () => {
+  const ph = parseHash();
+  if (ph.prof){ openProf(); return; }
+  if (ph.aval !== state.aval){ state.aval = ph.aval; applyAvalUI(); refreshExMeta(); renderOverlay(); }
+  const lchg = String(ph.lista) !== String(state.lista);
+  if (lchg){ state.lista = ph.lista; applyListUI(); }
+  setMode(ph.mode);
+  if (lchg){ const j = EXERCISES.findIndex(e => inList(e) && !(state.mode === 'orto' && ORTO[e.id] === 'X')); if (j >= 0) loadExercise(EXERCISES[j], j, 1); else renderProgress(); }
+});
 classifyAll();
 })();
 </script>
