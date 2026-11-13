@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 2.1.1 (novembro de 2026)
+- Gerador de PDF movido para a mesma pasta do aplicativo (sem a subpasta `vendor`), para facilitar o envio ao GitHub pelo navegador.
+
 ## 2.1 (novembro de 2026)
 - Lista de peças separada no arquivo `exercicios.js`, com verificação de cada peça ao abrir: peças com erro de cadastro são ignoradas e listadas, sem impedir o funcionamento do aplicativo.
 - Painel do professor (rodapé ou `#professor`): gerador de link de atividade (modo, avaliação e lista de peças), editor de peças com pré-visualização e verificação de todas as peças.

@@ -11,16 +11,17 @@ Versão: 2.1 (novembro de 2026)
 |---|---|
 | `index.html` | O aplicativo: motor geométrico, interface, avaliação e relatórios |
 | `exercicios.js` | A lista de peças. É o único arquivo que precisa ser editado para incluir ou alterar peças |
-| `vendor/jspdf.umd.min.js` | Gerador de PDF (biblioteca jsPDF 2.5.1, licença MIT), incluído para funcionar sem internet |
+| `jspdf.umd.min.js` | Gerador de PDF (biblioteca jsPDF 2.5.1, licença MIT), incluído para funcionar sem internet |
+| `jspdf-LICENSE.txt` | Licença da biblioteca jsPDF |
 | `README.md` | Este guia |
 | `CHANGELOG.md` | Histórico de versões |
 
-Os três primeiros arquivos (e a pasta `vendor`) precisam ficar juntos na mesma pasta, tanto no computador quanto no GitHub.
+Todos os arquivos ficam juntos na mesma pasta, sem subpastas, tanto no computador quanto no GitHub.
 
 ## Publicar no GitHub Pages
 
 1. No repositório `santosjp10.github.io`, abra a pasta `Perspectiva`.
-2. Envie (Add file → Upload files) os arquivos `index.html`, `exercicios.js`, `README.md`, `CHANGELOG.md` e a pasta `vendor`, substituindo os antigos.
+2. Clique em Add file → Upload files, selecione todos os arquivos do pacote (`index.html`, `exercicios.js`, `jspdf.umd.min.js`, `jspdf-LICENSE.txt`, `README.md`, `CHANGELOG.md`) e confirme com Commit changes. Os arquivos antigos de mesmo nome são substituídos.
 3. Aguarde alguns minutos e abra `https://santosjp10.github.io/Perspectiva/`. O rodapé mostra a versão em uso.
 
 Sugestão: mantenha uma pasta de teste (por exemplo `Perspectiva-teste`) para conferir uma versão nova antes de substituir a dos alunos.
