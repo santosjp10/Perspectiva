@@ -36,6 +36,14 @@ Sugestão: mantenha uma pasta de teste (por exemplo `Perspectiva-teste`) para co
 
 Inclua peças novas sempre no fim da lista, para que os números das peças antigas não mudem.
 
+## Senha do Painel do professor
+
+1. Abra o Painel do professor → **Acesso**, informe login e senha e clique em **Gerar linha de acesso**.
+2. Copie a linha gerada e, no arquivo `exercicios.js`, substitua a linha `window.ISO_PROFESSOR = null;` por ela.
+3. Publique o `exercicios.js`. A partir daí, o painel pede login e senha; o acesso vale até o navegador ser fechado.
+
+A senha não fica gravada no arquivo, apenas um código derivado dela. Para trocar a senha (ou se esquecê-la), gere uma linha nova e substitua a anterior.
+
 ## Links para a turma
 
 | Link | Abre |

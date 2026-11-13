@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 2.2 (novembro de 2026)
+- Login e senha para o Painel do professor, configurados pelo próprio painel (seção Acesso) e gravados como código derivado da senha no `exercicios.js`.
+
 ## 2.1.1 (novembro de 2026)
 - Gerador de PDF movido para a mesma pasta do aplicativo (sem a subpasta `vendor`), para facilitar o envio ao GitHub pelo navegador.
 

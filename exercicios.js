@@ -27,6 +27,11 @@
            PR(eixo, de, até, [[a,b], ...]) = prisma de polígono convexo,
            extrudado ao longo do eixo ("x", "y" ou "z").
    ===================================================================== */
+/* ACESSO AO PAINEL DO PROFESSOR
+   Para proteger o painel com login e senha, abra o Painel do professor,
+   seção "Acesso", gere a linha de acesso e substitua a linha abaixo por ela. */
+window.ISO_PROFESSOR = null;
+
 (function(){
 const B=(...a)=>({box:a}), PR=(axis,from,to,poly)=>({prism:{axis,from,to,poly}});
 const G1='Ficha de vistas (24 peças)', G2='Modelos de cubo, série 1', G3='Modelos de cubo, série 2';
