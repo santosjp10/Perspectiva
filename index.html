@@ -184,6 +184,24 @@ ul.fb li.bad{ border-color:var(--bad); }
 .exp{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
 .linkish{ background:none; border:none; padding:0; margin-top:10px; color:var(--muted); text-decoration:underline; cursor:pointer; font-size:13px; }
 .linkish:hover, .linkish.armed{ color:var(--bad); }
+.modes{ display:flex; border-bottom:1px solid var(--rule); }
+.modes button{ flex:1; border:none; background:none; padding:10px 12px; font:600 16px "Barlow Condensed", "Arial Narrow", sans-serif; color:var(--muted); border-bottom:3px solid transparent; cursor:pointer; }
+.modes button:hover{ color:var(--ink); }
+.modes button[aria-selected="true"]{ color:var(--accent); border-bottom-color:var(--accent); background:var(--accent-soft); }
+#orto{ display:block; width:100%; height:auto; touch-action:none; cursor:crosshair; user-select:none; -webkit-user-select:none; }
+#orto[hidden], #iso[hidden]{ display:none; }
+#orto.erasing{ cursor:cell; }
+.oframe{ fill:none; stroke:var(--grid-node); stroke-width:1.3; stroke-dasharray:6 4; }
+.olab{ fill:var(--muted); font:500 13px "Barlow", sans-serif; }
+.useg.hid{ stroke-dasharray:7 5; stroke-width:2.2; stroke-linecap:butt; }
+.ov-ok.hid, .ov-bad.hid, .ov-shift.hid{ stroke-dasharray:7 5; stroke-linecap:butt; }
+.ov-miss.hid{ stroke-dasharray:1.5 4.5; stroke-width:2.8; }
+.solid-edge.hidl{ stroke-dasharray:6 4; }
+.prev.dash{ stroke-dasharray:3 4; }
+.persp-edge{ stroke:var(--ink); stroke-width:1.5; stroke-linecap:round; }
+.persp-grid{ stroke:var(--ink); stroke-width:.6; opacity:.4; }
+.btn[hidden]{ display:none; }
+.cell.na{ opacity:.3; cursor:not-allowed; text-decoration:line-through; }
 .toast{ z-index:1000; }
 #repDlg{ width:min(860px,94vw); max-height:90vh; padding:0; border:1px solid var(--rule); border-radius:6px; background:var(--paper); color:var(--ink); }
 #repDlg::backdrop{ background:rgba(20,26,30,.45); }
@@ -219,7 +237,7 @@ ul.fb li.bad{ border-color:var(--bad); }
     </section>
     <section aria-labelledby="h-instr">
       <h2 id="h-instr">Instrução para a atividade</h2>
-      <p>Leia as vistas ortográficas e construa a perspectiva isométrica da peça sobre a malha. Ao terminar, solicite a avaliação automática.</p>
+      <p id="instrText">Leia as vistas ortográficas e construa a perspectiva isométrica da peça sobre a malha. Ao terminar, solicite a avaliação automática.</p>
     </section>
   </div>
 </header>
@@ -238,14 +256,25 @@ ul.fb li.bad{ border-color:var(--bad); }
     </section>
 
     <section class="panel" aria-labelledby="h-views">
-      <h2 id="h-views">Vistas ortográficas</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h2 id="h-views" style="margin:0">Vistas ortográficas</h2>
+        <button class="btn" id="gridBtn" aria-pressed="true" hidden title="Mostrar ou ocultar a malha de 1 módulo nas faces da peça" style="padding:5px 9px;font-size:13.5px">Malha nas faces</button>
+      </div>
       <svg id="views" role="img" aria-label="Vistas frontal, lateral esquerda e superior da peça"></svg>
-      <p class="note">1º diedro (ABNT NBR 10067): lateral esquerda à direita da frontal, superior abaixo dela. Cada quadrado da vista equivale a 1 módulo da malha. Linhas tracejadas são arestas invisíveis; traço e ponto, linhas de centro.</p>
+      <p class="note" id="viewsNote">1º diedro (ABNT NBR 10067): lateral esquerda à direita da frontal, superior abaixo dela. Cada quadrado da vista equivale a 1 módulo da malha. Linhas tracejadas são arestas invisíveis; traço e ponto, linhas de centro.</p>
     </section>
 
     <details class="panel help">
       <summary>Como usar</summary>
-      <ol>
+      <ol id="helpOrto" hidden>
+        <li>Digite seu nome no painel Progresso. Cada avaliação fica registrada e pode ser exportada como relatório.</li>
+        <li>Observe a perspectiva da peça. Quando aparecer também a vista de trás, use-a para ver os detalhes das faces posterior e lateral direita.</li>
+        <li>Desenhe cada vista no seu quadro, no 1º diedro: frontal no alto à esquerda, lateral esquerda à direita dela e superior abaixo dela.</li>
+        <li>Comece cada vista pelo <b>ponto vermelho</b>, que marca o canto inferior esquerdo da vista. Na lateral esquerda, esse canto corresponde ao fundo da peça (a face posterior fica voltada para a vista frontal).</li>
+        <li>Use <b>Contínua</b> para arestas visíveis e <b>Tracejada</b> para arestas invisíveis. Para trocar o tipo de uma linha já desenhada, desenhe-a de novo com a outra ferramenta.</li>
+        <li>Cada quadrado da malha vale 1 módulo, a mesma medida da perspectiva. Atalhos: <kbd>L</kbd> contínua, <kbd>T</kbd> tracejada, <kbd>E</kbd> borracha, <kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer, <kbd>Enter</kbd> avaliar.</li>
+      </ol>
+      <ol id="helpIso">
         <li>Digite seu nome no painel Progresso. Cada avaliação fica registrada e pode ser exportada como relatório.</li>
         <li>Comece pelo <b>ponto inicial</b> vermelho: ele é o vértice inferior mais próximo do observador.</li>
         <li>Com a ferramenta Linha, clique em um nó da malha e depois em outro. As linhas se encadeiam; clique de novo no último ponto, toque com o botão direito ou pressione <kbd>Esc</kbd> para soltar. Arrastar também desenha uma linha avulsa.</li>
@@ -256,9 +285,14 @@ ul.fb li.bad{ border-color:var(--bad); }
     </details>
   </div>
 
-  <section class="board" aria-label="Malha isométrica">
+  <section class="board" id="board" aria-label="Malha isométrica">
+    <div class="modes" role="tablist" aria-label="Modo de prática">
+      <button role="tab" id="modeIso" aria-selected="true">Vistas → Perspectiva</button>
+      <button role="tab" id="modeOrto" aria-selected="false">Perspectiva → Vistas</button>
+    </div>
     <div class="toolbar" role="toolbar" aria-label="Ferramentas de desenho">
-      <button class="btn" id="toolLine" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13 13 3"/><circle cx="3" cy="13" r="1.6" fill="currentColor"/><circle cx="13" cy="3" r="1.6" fill="currentColor"/></svg>Linha</button>
+      <button class="btn" id="toolLine" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13 13 3"/><circle cx="3" cy="13" r="1.6" fill="currentColor"/><circle cx="13" cy="3" r="1.6" fill="currentColor"/></svg><span id="toolLineLab">Linha</span></button>
+      <button class="btn" id="toolHidden" aria-pressed="false" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2.6 2.2"><path d="M3 13 13 3"/></svg>Tracejada</button>
       <button class="btn" id="toolErase" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 13 7.5-7.5-3-3L3 10l3 3h7"/><path d="m5.5 7.5 3 3"/></svg>Borracha</button>
       <span class="sep"></span>
       <button class="btn" id="undoBtn" title="Desfazer (Ctrl+Z)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4 2 7l3 3"/><path d="M2 7h7.5a4 4 0 0 1 0 8H7"/></svg>Desfazer</button>
@@ -271,10 +305,11 @@ ul.fb li.bad{ border-color:var(--bad); }
     </div>
     <div class="sheet">
       <svg id="iso" viewBox="0 0 760 620" role="img" aria-label="Malha isométrica para desenho"></svg>
+      <svg id="orto" viewBox="0 0 760 760" role="img" aria-label="Malha quadriculada para desenhar as vistas" hidden></svg>
       <div class="carimbo" aria-hidden="true">
         <div class="title" id="cbTitle">—</div>
         <div class="k">Projeção</div><div class="v">1º diedro</div>
-        <div class="k">Perspectiva</div><div class="v">Isométrica</div>
+        <div class="k">Exercício</div><div class="v" id="cbMode">Perspectiva isométrica</div>
         <div class="k">Escala</div><div class="v">1 módulo = 1 aresta da malha</div>
       </div>
     </div>
@@ -284,6 +319,7 @@ ul.fb li.bad{ border-color:var(--bad); }
   <div class="side right">
     <section class="panel" aria-labelledby="h-prog">
       <h2 id="h-prog">Progresso</h2>
+      <p class="note" id="progMode" style="margin:-4px 0 8px"></p>
       <label class="field"><span>Nome do aluno</span><input id="stuName" list="stuList" autocomplete="off" placeholder="Digite seu nome completo" maxlength="80"></label>
       <datalist id="stuList"></datalist>
       <div class="stats">
@@ -545,6 +581,9 @@ function solve(m){
   const res = { iso:new Map(), front:new Map(), left:new Map(), top:new Map() };
   const faces = new Map();
   const planeAt = (tg, p) => { const [Q, v] = tg.ray(p); return rayHit(m.prims, Q, v); };
+  /* Perspectiva vista de trás (observador em +x, +y, +z): usada para saber se as vistas podem ser deduzidas. */
+  const REAR = { proj:X => [X[0]-X[1], X[0]+X[1]-2*X[2]], ray:p => [[(p[0]+p[1])/2, (p[1]-p[0])/2, 0], [-1,-1,-1]] };
+  const expl = { front:new Map(), left:new Map(), top:new Map() };
   for (const [A, B] of m.edges){
     const d3 = [B[0]-A[0], B[1]-A[1], B[2]-A[2]];
     const info = {}; let Lc = 1;
@@ -557,11 +596,34 @@ function solve(m){
     const real = [];
     for (let i = 0; i < N; i++){ const l = (i + 0.5) / N; real.push(isRealEdge(m.prims, [A[0]+d3[0]*l, A[1]+d3[1]*l, A[2]+d3[2]*l], d3)); }
     if (!real.some(Boolean)) continue;
+    const seen = {};
+    for (const [kk, tg] of [['F', T.iso], ['R', REAR]]){
+      const qa = tg.proj(A), qb = tg.proj(B); const qd = [qb[0]-qa[0], qb[1]-qa[1]]; const ql = Math.hypot(qd[0], qd[1]);
+      const arr = new Array(N).fill(false);
+      if (ql > 1e-9){
+        const pp = [-qd[1] / ql * 1e-3, qd[0] / ql * 1e-3];
+        for (let i = 0; i < N; i++){
+          if (!real[i]) continue;
+          const l = (i + 0.5) / N, q = [qa[0] + qd[0]*l, qa[1] + qd[1]*l];
+          const a1 = planeAt(tg, [q[0]+pp[0], q[1]+pp[1]]), a2 = planeAt(tg, [q[0]-pp[0], q[1]-pp[1]]);
+          arr[i] = (a1 ? a1.key : '') !== (a2 ? a2.key : '');
+        }
+      }
+      seen[kk] = arr;
+    }
+    const bits = new Array(N).fill(0);
+    for (let i = 0; i < N;){
+      if (!real[i]){ i++; continue; }
+      let j = i, b = 0;
+      while (j < N && real[j]){ if (seen.F[j]) b |= 1; if (seen.R[j]) b |= 2; j++; }
+      for (let q = i; q < j; q++) bits[q] = b;
+      i = j;
+    }
     for (const k in T){
       const { pa, pb, n } = info[k]; if (!n) continue;
       const dd = [pb[0]-pa[0], pb[1]-pa[1]]; const dl = Math.hypot(dd[0], dd[1]);
       const perp = [-dd[1] / dl * 1e-3, dd[0] / dl * 1e-3];
-      const per = N / n, vis = new Array(n).fill(0), hid = new Array(n).fill(0), fset = [];
+      const per = N / n, vis = new Array(n).fill(0), hid = new Array(n).fill(0), fset = [], eb = new Array(n).fill(0);
       for (let i = 0; i < N; i++){
         if (!real[i]) continue;
         const l = (i + 0.5) / N, u = Math.floor(l * n);
@@ -569,6 +631,7 @@ function solve(m){
         const p1 = planeAt(T[k], [p[0]+perp[0], p[1]+perp[1]]), p2 = planeAt(T[k], [p[0]-perp[0], p[1]-perp[1]]);
         const k1 = p1 ? p1.key : '', k2 = p2 ? p2.key : '';
         if (k1 !== k2){ vis[u]++; if (k === 'iso'){ (fset[u] = fset[u] || []).push(p1, p2); } } else hid[u]++;
+        eb[u] |= bits[i];
       }
       for (let u = 0; u < n; u++){
         const P0 = [Math.round(pa[0] + dd[0]*u/n), Math.round(pa[1] + dd[1]*u/n)];
@@ -579,6 +642,7 @@ function solve(m){
           if (k === 'iso'){ let s = faces.get(key); if (!s){ s = new Set(); faces.set(key, s); }
             for (const pl of fset[u] || []) if (pl){ if (Math.abs(pl.n[0]) > 1e-6) s.add('left'); if (Math.abs(pl.n[1]) > 1e-6) s.add('front'); if (Math.abs(pl.n[2]) > 1e-6) s.add('top'); } }
         } else if (vis[u] + hid[u] >= per / 2 && prev < 1) res[k].set(key, 1);
+        if (k !== 'iso' && (vis[u] >= per / 2 || vis[u] + hid[u] >= per / 2)) expl[k].set(key, (expl[k].get(key) || 0) | eb[u]);
       }
     }
   }
@@ -586,7 +650,9 @@ function solve(m){
   let start = null;
   for (const k of edges){ const [a,b,c,d] = pe(k); for (const p of [[a,b],[c,d]]) if (!start || p[1] < start[1] || (p[1] === start[1] && Math.abs(p[0]) < Math.abs(start[0]))) start = p; }
   const view = k => ({ vis:[...res[k]].filter(([, v]) => v === 2).map(([q]) => q), hid:[...res[k]].filter(([, v]) => v === 1).map(([q]) => q) });
-  return { edges, edgeFaces:faces, start, views:{ front:view('front'), left:view('left'), top:view('top') } };
+  let needR = false, bad = 0;
+  for (const k of ['front','left','top']) for (const [key, v] of res[k]){ if (!v) continue; const b = expl[k].get(key) || 0; if (!b) bad++; else if (!(b & 1)) needR = true; }
+  return { edges, edgeFaces:faces, start, views:{ front:view('front'), left:view('left'), top:view('top') }, orto: bad ? 'X' : needR ? 'FR' : 'F' };
 }
 
 /* ===================== Vistas ortográficas ===================== */
@@ -630,35 +696,55 @@ function getStudent(create){
   return prog.students[k];
 }
 function gradeOf(s){ return s >= 95 ? ['Excelente', 'var(--ok)', 4] : s >= 80 ? ['Bom', 'var(--accent)', 3] : s >= 60 ? ['Regular', 'var(--warn)', 2] : ['Precisa praticar', 'var(--bad)', 1]; }
-function summary(st){
-  const rows = EXERCISES.map((e, i) => {
-    const att = st ? st.history.filter(h => h.id === e.id) : [];
-    const best = st && st.best[e.id] != null ? st.best[e.id] : null;
-    return { n:i + 1, ex:e, attempts:att.length, best, last: att.length ? att[att.length - 1].score : null, lastC: att.length ? att[att.length - 1].c : null };
+const MODE_TITLE = { iso:'Modo 1 - Perspectiva a partir das vistas', orto:'Modo 2 - Vistas a partir da perspectiva' };
+const MODE_SHORT = { iso:'Vistas → Perspectiva', orto:'Perspectiva → Vistas' };
+const CRIT_LABELS = { iso:['Arestas da peça desenhadas', 'Ausência de linhas indevidas', 'Vértices corretos', 'Início no ponto indicado', 'Conexões entre arestas'],
+  orto:['Linhas visíveis desenhadas', 'Linhas ocultas desenhadas', 'Tipo de linha correto', 'Ausência de linhas indevidas', 'Correspondência entre as vistas'] };
+const ORTO = {};
+const modeOf = h => h.modo || 'iso';
+const bestMap = (st, mode) => st ? (mode === 'orto' ? (st.bestV || {}) : (st.best || {})) : {};
+function summary(st, mode){
+  mode = mode || state.mode;
+  const bm = bestMap(st, mode);
+  const hist = st ? st.history.filter(h => modeOf(h) === mode) : [];
+  const rows = [];
+  EXERCISES.forEach((e, i) => {
+    if (mode === 'orto' && ORTO[e.id] === 'X') return;
+    const att = hist.filter(h => h.id === e.id);
+    const best = bm[e.id] != null ? bm[e.id] : null;
+    rows.push({ n:i + 1, ex:e, attempts:att.length, best, last: att.length ? att[att.length - 1].score : null, lastC: att.length ? att[att.length - 1].c : null });
   });
   const done = rows.filter(r => r.best != null);
   const avgDone = done.length ? Math.round(done.reduce((s, r) => s + r.best, 0) / done.length) : 0;
   const overall = Math.round(rows.reduce((s, r) => s + (r.best || 0), 0) / rows.length);
   const passed = rows.filter(r => r.best != null && r.best >= 60).length;
-  const extras = st ? st.history.filter(h => h.id === 'rnd') : [];
+  const extras = hist.filter(h => h.id === 'rnd');
   const crit = [0,0,0,0,0]; done.forEach(r => r.lastC && r.lastC.forEach((v, i) => crit[i] += v));
   const critAvg = done.length ? crit.map(v => v / done.length) : null;
-  return { rows, done:done.length, avgDone, overall, passed, attempts: st ? st.history.length : 0, extras, critAvg };
+  return { mode, rows, total:rows.length, done:done.length, avgDone, overall, passed, attempts:hist.length, hist, extras, critAvg };
 }
 function renderProgress(){
   const st = getStudent(false); const sm = summary(st);
-  $('#stDone').textContent = `${sm.done}/${EXERCISES.length}`;
+  $('#progMode').textContent = `Exibindo o modo ${state.mode === 'orto' ? '2' : '1'}: ${MODE_SHORT[state.mode]}`;
+  $('#stDone').textContent = `${sm.done}/${sm.total}`;
   $('#stAvg').textContent = sm.done ? sm.avgDone : '—';
   $('#stOverall').textContent = sm.done ? sm.overall : '—';
   const cells = $('#cells'); cells.innerHTML = '';
-  sm.rows.forEach((r, i) => {
+  const byId = new Map(sm.rows.map(r => [r.ex.id, r]));
+  EXERCISES.forEach((e, i) => {
+    const r = byId.get(e.id);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'cell';
-    if (r.best != null) b.classList.add('g' + gradeOf(r.best)[2]);
+    b.textContent = i + 1;
+    if (!r){
+      b.classList.add('na'); b.disabled = true;
+      b.title = `${i + 1}. ${e.nome}: indisponível neste modo (as vistas não podem ser deduzidas só pela perspectiva)`;
+    } else {
+      if (r.best != null) b.classList.add('g' + gradeOf(r.best)[2]);
+      b.title = `${r.n}. ${r.ex.nome} — ${r.best != null ? 'melhor nota ' + r.best + ', ' + r.attempts + ' tentativa' + (r.attempts > 1 ? 's' : '') : 'não realizado'}`;
+      b.onclick = () => loadExercise(EXERCISES[i], i);
+    }
     if (i === state.idx) b.classList.add('cur');
-    b.textContent = r.n;
-    b.title = `${r.n}. ${r.ex.nome} — ${r.best != null ? 'melhor nota ' + r.best + ', ' + r.attempts + ' tentativa' + (r.attempts > 1 ? 's' : '') : 'não realizado'}`;
     b.setAttribute('aria-label', b.title);
-    b.onclick = () => loadExercise(EXERCISES[i], i);
     cells.appendChild(b);
   });
   renderTrend(st);
@@ -672,7 +758,8 @@ function renderTrend(st){
   const svg = $('#trend'); svg.innerHTML = '';
   const Wd = 280, Ht = 120, pl = 26, pr = 6, pt = 8, pb = 18;
   svg.setAttribute('viewBox', `0 0 ${Wd} ${Ht}`);
-  const hist = st ? st.history.slice(-25) : [];
+  const all = st ? st.history.filter(h => modeOf(h) === state.mode) : [];
+  const hist = all.slice(-25);
   const Y = v => pt + (1 - v / 100) * (Ht - pt - pb);
   for (const v of [0, 60, 80, 100]){
     el('line', { x1:pl, x2:Wd - pr, y1:Y(v), y2:Y(v), class: v === 60 || v === 80 ? 'tr-ref' : 'tr-grid' }, svg);
@@ -686,20 +773,21 @@ function renderTrend(st){
     const t = el('title', null, c); t.textContent = `${h.nome}: ${h.score}`;
   });
   const t = el('text', { x:Wd - pr, y:Ht - 3, class:'tr-lab', 'text-anchor':'end' }, svg);
-  t.textContent = hist.length < st.history.length ? `últimas ${hist.length} de ${st.history.length} tentativas` : `${hist.length} tentativa${hist.length > 1 ? 's' : ''}`;
+  t.textContent = hist.length < all.length ? `últimas ${hist.length} de ${all.length} tentativas` : `${hist.length} tentativa${hist.length > 1 ? 's' : ''}`;
 }
 function recordAttempt(r){
   const st = getStudent(true); if (!st) return;
-  const rnd = String(state.ex.id).startsWith('rnd');
-  st.history.push({ id: rnd ? 'rnd' : state.ex.id, nome: state.ex.nome, nivel: state.ex.nivel, score:r.score, ts:Date.now(),
-    c:[r.recall, r.precision, r.vF1, r.position, r.conn].map(v => Math.round(v * 100) / 100) });
-  if (!rnd && (st.best[state.ex.id] == null || r.score > st.best[state.ex.id])) st.best[state.ex.id] = r.score;
+  const rnd = String(state.ex.id).startsWith('rnd'); const md = state.mode;
+  const c = r.cArr || [r.recall, r.precision, r.vF1, r.position, r.conn];
+  st.history.push({ id: rnd ? 'rnd' : state.ex.id, nome: state.ex.nome, nivel: state.ex.nivel, score:r.score, ts:Date.now(), modo:md,
+    c:c.map(v => Math.round(v * 100) / 100) });
+  if (!rnd){ const key = md === 'orto' ? 'bestV' : 'best'; st[key] = st[key] || {}; if (st[key][state.ex.id] == null || r.score > st[key][state.ex.id]) st[key][state.ex.id] = r.score; }
   prog.current = st.name; saveProg();
 }
 
 /* ===================== Estado e malha ===================== */
 let S = 40, OX = VW/2, OY = VH/2;
-const state = { idx:0, ex:null, model:null, sol:null, segs:[], undo:[], redo:[], tool:'line', start:null, hover:null, down:null, erasing:false, eraseSnap:null, result:null, stale:false, showSolid:false, solidImg:null };
+const state = { mode:'iso', idx:0, ex:null, model:null, sol:null, segs:[], undo:[], redo:[], tool:'line', start:null, hover:null, down:null, erasing:false, eraseSnap:null, result:null, stale:false, showSolid:false, solidImg:null, rear:null, persp:null };
 const P = (u, t) => [OX + u * C * S, OY - t * S / 2];
 const iso = $('#iso');
 const L = {};
@@ -766,6 +854,7 @@ function solidImage(){
   return { href:cv.toDataURL('image/png'), x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
 }
 function renderSolid(){
+  if (state.mode === 'orto') return oRenderSolid();
   const g = L.solid; g.innerHTML = '';
   if (!state.showSolid) return;
   if (!state.solidImg) state.solidImg = solidImage();
@@ -774,10 +863,12 @@ function renderSolid(){
   for (const k of state.sol.edges){ const [a,b,c,d] = pe(k); const p = P(a,b), q = P(c,d); el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:'solid-edge' }, g); }
 }
 function renderUser(){
+  if (state.mode === 'orto') return oRenderUser();
   const g = L.user; g.innerHTML = '';
   for (const sg of state.segs){ const p = P(sg.a[0], sg.a[1]), q = P(sg.b[0], sg.b[1]); el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:'useg' }, g); }
 }
 function renderOverlay(){
+  if (state.mode === 'orto') return oRenderOverlay();
   const g = L.overlay; g.innerHTML = '';
   const r = state.result; if (!r || state.stale) return;
   const line = (k, cls) => { const [a,b,c,d] = pe(k); const p = P(a,b), q = P(c,d); el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:cls }, g); };
@@ -792,6 +883,7 @@ function renderStart(){
   const t = el('text', { x:x + 10, y:y + 20, class:'startlab' }, g); t.textContent = 'ponto inicial';
 }
 function renderPreview(){
+  if (state.mode === 'orto') return oRenderPreview();
   const g = L.preview; g.innerHTML = '';
   const c = L.cursor; c.innerHTML = '';
   if (state.hover && state.tool === 'line'){ const [x, y] = P(state.hover[0], state.hover[1]); el('circle', { cx:x, cy:y, r:6, class:'cursor' }, c); }
@@ -810,13 +902,15 @@ function renderPreview(){
   const tx = el('text', { x:hx + 14, y:hy - 12 }, tag); tx.textContent = label;
   const bb = tx.getBBox(); const rc = el('rect', { x:bb.x - 5, y:bb.y - 2, width:bb.width + 10, height:bb.height + 4, rx:3 }); tag.insertBefore(rc, tx);
 }
-function renderAll(){ renderGrid(); renderSolid(); renderUser(); renderOverlay(); renderStart(); renderPreview(); renderLegend(); updateButtons(); updateStatus(); }
+function renderAll(){ if (state.mode === 'orto') return oRenderAll(); renderGrid(); renderSolid(); renderUser(); renderOverlay(); renderStart(); renderPreview(); renderLegend(); updateButtons(); updateStatus(); }
 function updateButtons(){
   $('#undoBtn').disabled = !state.undo.length;
   $('#redoBtn').disabled = !state.redo.length;
   $('#clearBtn').disabled = !state.segs.length;
   $('#toolLine').setAttribute('aria-pressed', state.tool === 'line');
   $('#toolErase').setAttribute('aria-pressed', state.tool === 'erase');
+  $('#toolHidden').setAttribute('aria-pressed', state.tool === 'hidden');
+  $('#orto').classList.toggle('erasing', state.tool === 'erase');
   $('#solidBtn').setAttribute('aria-pressed', state.showSolid);
   $('#solidBtn').textContent = state.showSolid ? 'Ocultar gabarito' : 'Ver gabarito';
   iso.classList.toggle('erasing', state.tool === 'erase');
@@ -824,6 +918,12 @@ function updateButtons(){
 function updateStatus(){
   const st = $('#status');
   if (state.tool === 'erase') st.innerHTML = 'Borracha: clique ou arraste sobre uma linha para apagá-la.';
+  else if (state.mode === 'orto'){
+    const tipo = state.tool === 'hidden' ? '<b>tracejada</b> (aresta invisível)' : '<b>contínua</b> (aresta visível)';
+    if (state.start) st.innerHTML = `Linha ${tipo}: clique no próximo ponto. Para soltar, clique de novo no último ponto ou pressione <b>Esc</b>.`;
+    else if (!state.segs.length) st.innerHTML = `Comece cada vista pelo <b>ponto vermelho</b> do seu quadro. Ferramenta atual: linha ${tipo}.`;
+    else st.innerHTML = `${state.segs.length} linha${state.segs.length > 1 ? 's' : ''} nas vistas. Ferramenta atual: linha ${tipo}. Quando terminar, clique em <b>Avaliar desenho</b>.`;
+  }
   else if (!state.segs.length && !state.start) st.innerHTML = 'Clique no <b>ponto inicial</b> vermelho para começar a primeira aresta.';
   else if (state.start) st.innerHTML = 'Clique no próximo vértice. Para soltar a linha, clique de novo no último ponto ou pressione <b>Esc</b>.';
   else st.innerHTML = `${state.segs.length} linha${state.segs.length > 1 ? 's' : ''} desenhada${state.segs.length > 1 ? 's' : ''}. Quando terminar, clique em <b>Avaliar desenho</b>.`;
@@ -832,10 +932,11 @@ function updateStatus(){
 /* ===================== Edição ===================== */
 function pushUndo(){ state.undo.push(JSON.stringify(state.segs)); if (state.undo.length > 300) state.undo.shift(); state.redo = []; }
 function changed(){ if (state.result) state.stale = true; renderUser(); renderOverlay(); renderPreview(); updateButtons(); updateStatus(); renderResults(); }
-function addSeg(a, b){
+function addSeg(a, b, t){
   if (same(a, b)) return;
-  if (state.segs.some(s => (same(s.a, a) && same(s.b, b)) || (same(s.a, b) && same(s.b, a)))) return;
-  pushUndo(); state.segs.push({ a:[...a], b:[...b] }); changed();
+  const ex = state.segs.find(s => (same(s.a, a) && same(s.b, b)) || (same(s.a, b) && same(s.b, a)));
+  if (ex){ if (t && ex.t !== t){ pushUndo(); ex.t = t; changed(); } return; }
+  pushUndo(); const sg = { a:[...a], b:[...b] }; if (t) sg.t = t; state.segs.push(sg); changed();
 }
 function distSeg(p, a, b){
   const vx = b[0]-a[0], vy = b[1]-a[1]; const L2 = vx*vx + vy*vy;
@@ -843,7 +944,8 @@ function distSeg(p, a, b){
   const dx = a[0] + t*vx - p.x, dy = a[1] + t*vy - p.y; return Math.sqrt(dx*dx + dy*dy);
 }
 function eraseAt(p){
-  const keep = state.segs.filter(s => distSeg(p, P(s.a[0], s.a[1]), P(s.b[0], s.b[1])) > 9);
+  const map = state.mode === 'orto' ? (q => G2S(q[0], q[1])) : (q => P(q[0], q[1]));
+  const keep = state.segs.filter(s => distSeg(p, map(s.a), map(s.b)) > 9);
   if (keep.length !== state.segs.length){ if (!state.eraseSnap){ pushUndo(); state.eraseSnap = true; } state.segs = keep; changed(); }
 }
 iso.addEventListener('pointermove', e => {
@@ -876,6 +978,7 @@ function undo(){ if (!state.undo.length) return; state.redo.push(JSON.stringify(
 function redo(){ if (!state.redo.length) return; state.undo.push(JSON.stringify(state.segs)); state.segs = JSON.parse(state.redo.pop()); state.start = null; changed(); }
 $('#toolLine').onclick = () => setTool('line');
 $('#toolErase').onclick = () => setTool('erase');
+$('#toolHidden').onclick = () => setTool('hidden');
 $('#undoBtn').onclick = undo;
 $('#redoBtn').onclick = redo;
 $('#clearBtn').onclick = () => { if (!state.segs.length) return; pushUndo(); state.segs = []; state.start = null; changed(); toast('Desenho apagado. Use Desfazer para recuperar.'); };
@@ -889,6 +992,7 @@ document.addEventListener('keydown', e => {
   else if (e.ctrlKey || e.metaKey || e.altKey) return;
   else if (k === 'escape'){ state.start = null; renderPreview(); updateStatus(); }
   else if (k === 'l') setTool('line');
+  else if (k === 't' && state.mode === 'orto') setTool('hidden');
   else if (k === 'e') setTool('erase');
   else if (k === 'enter' && !e.target.closest('button')){ e.preventDefault(); evaluate(); }
 });
@@ -931,6 +1035,7 @@ function maximal(set){
   return out;
 }
 function evaluate(){
+  if (state.mode === 'orto') return oEvaluate();
   if (!$('#stuName').value.trim()){ toast('Digite seu nome no painel Progresso para registrar a avaliação.'); $('#stuName').focus(); return; }
   const sol = state.sol.edges;
   const U0 = unitEdges(state.segs);
@@ -1008,6 +1113,7 @@ function evaluate(){
   if (window.matchMedia('(max-width: 1240px)').matches) $('#results').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 function renderResults(){
+  if (state.mode === 'orto') return oRenderResults();
   const box = $('#results'); const r = state.result;
   if (!r){
     box.innerHTML = `<h2>Avaliação</h2><p class="empty">Desenhe a peça na malha e clique em <b>Avaliar desenho</b>. A avaliação compara vértices, comprimento e direção das arestas, conexões, posição em relação ao ponto inicial e a correspondência com cada vista.</p>`;
@@ -1048,6 +1154,411 @@ function renderResults(){
       <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--bad)" stroke-width="3"/></svg>indevida</span>
       <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--warn)" stroke-width="2.4" stroke-dasharray="5 4"/></svg>faltante</span>
       ${r.shifted ? '<span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--shift)" stroke-width="3"/></svg>certa, deslocada</span>' : ''}
+    </div>`;
+}
+
+/* ===================== Modo 2: vistas a partir da perspectiva ===================== */
+const ortoSvg = $('#orto');
+const OL = {};
+['grid','frames','solid','user','overlay','preview','cursor'].forEach(n => { OL[n] = el('g', null, ortoSvg); });
+const OG = { G:24, R:8, s:30, frames:{}, origin:{} };
+const VIEWS = ['front','left','top'];
+const VNAME = { front:'Vista frontal', left:'Vista lateral esquerda', top:'Vista superior' };
+const drawings = { iso:null, orto:null };
+let modeApplied = false;
+function blankDrawing(){ return { segs:[], undo:[], redo:[], result:null, stale:false }; }
+function saveDrawing(){ drawings[state.mode] = { segs:state.segs, undo:state.undo, redo:state.redo, result:state.result, stale:state.stale }; }
+function restoreDrawing(md){ const d = drawings[md] || blankDrawing(); state.segs = d.segs; state.undo = d.undo; state.redo = d.redo; state.result = d.result; state.stale = d.stale; state.start = null; state.hover = null; }
+
+function oSetup(m){
+  const R = Math.max(m.W, m.D, m.H) + 2, gap = 2, G = 1 + R + gap + R + 1;
+  OG.G = G; OG.R = R; OG.s = 760 / G;
+  OG.frames = { front:[1, 1], left:[1 + R + gap, 1], top:[1, 1 + R + gap] };
+  OG.origin = { front:[2, R], left:[R + gap + 2, R], top:[2, 2 * R + gap] };
+}
+const G2S = (gx, gy) => [gx * OG.s, gy * OG.s];
+function oRegion(p){ for (const k of VIEWS){ const [x0, y0] = OG.frames[k]; if (p[0] >= x0 && p[0] <= x0 + OG.R && p[1] >= y0 && p[1] <= y0 + OG.R) return k; } return null; }
+const toLocal = (k, p) => [p[0] - OG.origin[k][0], OG.origin[k][1] - p[1]];
+const toGlobal = (k, q) => [q[0] + OG.origin[k][0], OG.origin[k][1] - q[1]];
+function oSnap(p){ return [Math.max(0, Math.min(OG.G, Math.round(p.x / OG.s))), Math.max(0, Math.min(OG.G, Math.round(p.y / OG.s)))]; }
+function oToSvg(e){ const pt = ortoSvg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(ortoSvg.getScreenCTM().inverse()); }
+function localLine(k, key, cls, g){
+  const [a1, b1, a2, b2] = pe(key);
+  const p = G2S(...toGlobal(k, [a1, b1])), q = G2S(...toGlobal(k, [a2, b2]));
+  el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:cls }, g);
+}
+
+function oRenderGrid(){
+  const g = OL.grid; g.innerHTML = ''; const s = OG.s, G = OG.G;
+  let d = '';
+  for (let i = 0; i <= G; i++){ const v = (i * s).toFixed(2); d += `M${v} 0V${(G * s).toFixed(2)}M0 ${v}H${(G * s).toFixed(2)}`; }
+  el('path', { d, class:'gline' }, g);
+  const f = OL.frames; f.innerHTML = '';
+  for (const k of VIEWS){
+    const [x0, y0] = OG.frames[k]; const [X, Y] = G2S(x0, y0);
+    el('rect', { x:X, y:Y, width:OG.R * s, height:OG.R * s, class:'oframe' }, f);
+    const t = el('text', { x:X + 6, y:Y + 17, class:'olab' }, f); t.textContent = VNAME[k];
+    const [ox, oy] = G2S(...OG.origin[k]);
+    el('circle', { cx:ox, cy:oy, r:7, class:'startring' }, f);
+    el('circle', { cx:ox, cy:oy, r:5, class:'startpt' }, f);
+  }
+}
+function oRenderSolid(){
+  const g = OL.solid; g.innerHTML = '';
+  if (!state.showSolid) return;
+  for (const k of VIEWS){
+    state.sol.views[k].hid.forEach(key => localLine(k, key, 'solid-edge hidl', g));
+    state.sol.views[k].vis.forEach(key => localLine(k, key, 'solid-edge', g));
+  }
+}
+function oRenderUser(){
+  const g = OL.user; g.innerHTML = '';
+  for (const sg of state.segs){ const p = G2S(...sg.a), q = G2S(...sg.b); el('line', { x1:p[0], y1:p[1], x2:q[0], y2:q[1], class:'useg' + (sg.t === 'hid' ? ' hid' : '') }, g); }
+}
+function oRenderOverlay(){
+  const g = OL.overlay; g.innerHTML = '';
+  const r = state.result; if (!r || state.stale || r.mode !== 'orto') return;
+  for (const [k, key, cls] of r.items){ if (state.showSolid && cls.startsWith('ov-miss')) continue; localLine(k, key, cls, g); }
+}
+function oRenderPreview(){
+  const g = OL.preview; g.innerHTML = '';
+  const c = OL.cursor; c.innerHTML = '';
+  const drawing = state.tool === 'line' || state.tool === 'hidden';
+  if (state.hover && drawing){ const [x, y] = G2S(...state.hover); el('circle', { cx:x, cy:y, r:6, class:'cursor' }, c); }
+  if (!state.start) return;
+  const [sx, sy] = G2S(...state.start);
+  el('circle', { cx:sx, cy:sy, r:4.5, class:'anchor' }, g);
+  if (!state.hover || same(state.hover, state.start) || !drawing) return;
+  const [hx, hy] = G2S(...state.hover);
+  const ra = oRegion(state.start), rb = oRegion(state.hover);
+  const inside = ra && ra === rb;
+  el('line', { x1:sx, y1:sy, x2:hx, y2:hy, class:'prev' + (state.tool === 'hidden' ? ' dash' : '') + (inside ? '' : ' incl') }, g);
+  const dx = state.hover[0] - state.start[0], dy = state.hover[1] - state.start[1];
+  let label;
+  if (!inside) label = 'fora do quadro da vista';
+  else if (dx === 0 || dy === 0){ const n = Math.abs(dx || dy); label = `${n} módulo${n > 1 ? 's' : ''}`; }
+  else label = 'linha inclinada';
+  const tag = el('g', { class:'prev-tag' }, g);
+  const tx = el('text', { x:hx + 14, y:hy - 12 }, tag); tx.textContent = label;
+  const bb = tx.getBBox(); const rc = el('rect', { x:bb.x - 5, y:bb.y - 2, width:bb.width + 10, height:bb.height + 4, rx:3 }); tag.insertBefore(rc, tx);
+}
+function oRenderAll(){ oRenderGrid(); oRenderSolid(); oRenderUser(); oRenderOverlay(); oRenderPreview(); updateButtons(); updateStatus(); }
+
+ortoSvg.addEventListener('pointermove', e => {
+  const p = oToSvg(e);
+  if (state.tool === 'erase'){ if (state.erasing) eraseAt(p); state.hover = null; oRenderPreview(); return; }
+  const n = oSnap(p); if (!same(n, state.hover)){ state.hover = n; oRenderPreview(); }
+});
+ortoSvg.addEventListener('pointerleave', () => { state.hover = null; oRenderPreview(); });
+ortoSvg.addEventListener('pointerdown', e => {
+  if (e.button === 2) return;
+  e.preventDefault();
+  try { ortoSvg.setPointerCapture(e.pointerId); } catch (_) {}
+  const p = oToSvg(e);
+  if (state.tool === 'erase'){ state.erasing = true; state.eraseSnap = null; eraseAt(p); return; }
+  state.down = oSnap(p);
+});
+ortoSvg.addEventListener('pointerup', e => {
+  if (state.tool === 'erase'){ state.erasing = false; state.eraseSnap = null; return; }
+  const d = state.down; state.down = null; if (!d) return;
+  const n = oSnap(oToSvg(e)); const t = state.tool === 'hidden' ? 'hid' : 'vis';
+  if (!same(n, d)){ addSeg(d, n, t); state.start = null; }
+  else if (!state.start) state.start = n;
+  else if (same(n, state.start)) state.start = null;
+  else { addSeg(state.start, n, t); state.start = n; }
+  state.hover = n; oRenderPreview(); updateStatus();
+});
+ortoSvg.addEventListener('contextmenu', e => { e.preventDefault(); state.start = null; oRenderPreview(); updateStatus(); });
+
+/* ---------- perspectiva exibida no painel esquerdo ---------- */
+function rotModel(m){
+  const W = m.W, D = m.D; const tp = X => [W - X[0], D - X[1], X[2]];
+  const prims = m.prims.map(pr => ({ planes: pr.planes.map(pl => mkPlane([-pl.n[0], -pl.n[1], pl.n[2]], pl.d - pl.n[0] * W - pl.n[1] * D)), edges: pr.edges.map(([A, B]) => [tp(A), tp(B)]) }));
+  return { W, D, H:m.H, prims, edges: m.edges.map(([A, B]) => [tp(A), tp(B)]) };
+}
+/* Malha de 1 módulo sobre as faces visíveis paralelas aos planos de projeção (faces inclinadas ficam sem malha). */
+function faceGrid(model){
+  const V = [1, 1, -1], dims = [model.W, model.D, model.H], out = [];
+  const planes = new Map();
+  for (const pr of model.prims) for (const pl of pr.planes){
+    const ax = [0, 1, 2].find(i => Math.abs(Math.abs(pl.n[i]) - 1) < 1e-9);
+    if (ax === undefined || dot(pl.n, V) >= 0 || planes.has(pl.key)) continue;
+    planes.set(pl.key, { ax, c: pl.d * Math.sign(pl.n[ax]), key: pl.key });
+  }
+  const onFace = (X, key) => { const u = X[0] - X[1], t = X[0] + X[1] + 2 * X[2]; const h = rayHit(model.prims, [(u + t) / 2, (t - u) / 2, 0], V); return !!h && h.key === key; };
+  for (const { ax, c, key } of planes.values()){
+    const others = [0, 1, 2].filter(i => i !== ax);
+    for (const [a, b] of [[others[0], others[1]], [others[1], others[0]]]){
+      const Lb = dims[b], N = Math.max(8, Math.ceil(Lb * 12));
+      for (let k = 0; k <= dims[a]; k++){
+        const pt = (sv, off) => { const X = [0, 0, 0]; X[ax] = c; X[a] = k + off; X[b] = sv; return X; };
+        const vis = sv => onFace(pt(sv, 1e-4), key) || onFace(pt(sv, -1e-4), key);
+        const refine = (s0, s1, v0) => { for (let it = 0; it < 12; it++){ const m = (s0 + s1) / 2; if (vis(m) === v0) s0 = m; else s1 = m; } return (s0 + s1) / 2; };
+        let prevS = 0, prevV = vis(0.001), start = prevV ? 0 : null;
+        for (let i = 1; i <= N; i++){
+          const sv = i === N ? Lb - 0.001 : Lb * i / N, v = vis(sv);
+          if (v !== prevV){ const edge = refine(prevS, sv, prevV); if (v) start = edge; else { out.push([pt(start, 0), pt(edge, 0)]); start = null; } }
+          prevS = sv; prevV = v;
+        }
+        if (start !== null) out.push([pt(start, 0), pt(Lb, 0)]);
+      }
+    }
+  }
+  return out.filter(([A, B]) => Math.hypot(A[0] - B[0], A[1] - B[1], A[2] - B[2]) > 0.05);
+}
+function isoPicture(model, edges, maxW, maxH){
+  let umin = Infinity, umax = -Infinity, tmin = Infinity, tmax = -Infinity;
+  for (const k of edges){ const [a,b,c,d] = pe(k); umin = Math.min(umin, a, c); umax = Math.max(umax, a, c); tmin = Math.min(tmin, b, d); tmax = Math.max(tmax, b, d); }
+  const sc = Math.min(maxW / ((umax - umin) * C), maxH / ((tmax - tmin) / 2));
+  const w = (umax - umin) * C * sc, h = (tmax - tmin) / 2 * sc;
+  const Pp = (u, t) => [(u - umin) * C * sc, (tmax - t) * sc / 2];
+  const cs = getComputedStyle(document.documentElement);
+  const cl = hexRgb(cs.getPropertyValue('--face-left')), cf = hexRgb(cs.getPropertyValue('--face-front')), ct = hexRgb(cs.getPropertyValue('--face-top'));
+  const R = 2, cw = Math.ceil(w * R), ch = Math.ceil(h * R);
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  const ctx = cv.getContext('2d'); const img = ctx.createImageData(cw, ch); const cache = new Map();
+  for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++){
+    const u = (i + 0.5) / R / (C * sc) + umin, t = tmax - 2 * ((j + 0.5) / R) / sc;
+    const pl = rayHit(model.prims, [(u + t) / 2, (t - u) / 2, 0], [1, 1, -1]);
+    if (!pl) continue;
+    let col = cache.get(pl.key);
+    if (!col){ const w2 = pl.n.map(v => v * v); col = [0,1,2].map(q => Math.round(cl[q]*w2[0] + cf[q]*w2[1] + ct[q]*w2[2])); cache.set(pl.key, col); }
+    const o = (j * cw + i) * 4; img.data[o] = col[0]; img.data[o+1] = col[1]; img.data[o+2] = col[2]; img.data[o+3] = 235;
+  }
+  ctx.putImageData(img, 0, 0);
+  const lines = []; for (const k of edges){ const [a,b,c,d] = pe(k); lines.push([...Pp(a, b), ...Pp(c, d)]); }
+  const PX = X => Pp(X[0] - X[1], X[0] + X[1] + 2 * X[2]);
+  const grid = faceGrid(model).map(([A, B]) => [...PX(A), ...PX(B)]);
+  return { href:cv.toDataURL('image/png'), w, h, lines, grid };
+}
+function miniCube(svg, x, y, labels, text){
+  const s = 15, Q = (u, t) => [x + 14 + u * C * s, y - t * s / 2];
+  const g = el('g', null, svg);
+  const poly = (pts, fill) => el('polygon', { points: pts.map(p => Q(p[0], p[1]).join(',')).join(' '), fill, class:'leg-face' }, g);
+  poly([[0,0],[-1,1],[-1,3],[0,2]], 'var(--face-left)');
+  poly([[0,0],[1,1],[1,3],[0,2]], 'var(--face-front)');
+  poly([[0,2],[1,3],[0,4],[-1,3]], 'var(--face-top)');
+  const tx = (u, t, s2) => { const [a, b] = Q(u, t); const e = el('text', { x:a, y:b, class:'leg-txt', style:'font-size:8px' }, g); e.textContent = s2; };
+  tx(-0.5, 1.5, labels[0]); tx(0.5, 1.5, labels[1]); tx(0, 3, labels[2]);
+  const cap = el('text', { x:x + 38, y:y - 18, class:'leg-cap' }, g); cap.textContent = text;
+}
+const NOTE_ISO = '1º diedro (ABNT NBR 10067): lateral esquerda à direita da frontal, superior abaixo dela. Cada quadrado da vista equivale a 1 módulo da malha. Linhas tracejadas são arestas invisíveis; traço e ponto, linhas de centro.';
+function renderLeft(){
+  if (state.mode !== 'orto'){
+    $('#h-views').textContent = 'Vistas ortográficas'; $('#viewsNote').textContent = NOTE_ISO;
+    $('#views').setAttribute('aria-label', 'Vistas frontal, lateral esquerda e superior da peça');
+    renderViews(state.model, state.sol, state.ex); return;
+  }
+  $('#h-views').textContent = 'Perspectiva da peça';
+  $('#views').setAttribute('aria-label', 'Perspectiva isométrica da peça');
+  const svg = $('#views'); svg.innerHTML = '';
+  const Wv = 300; let y = 0;
+  const pics = [{ m:state.model, edges:state.sol.edges, cap:'Perspectiva isométrica', labels:['LE','F','S'], text:'lateral esq., frontal e superior' }];
+  if (state.sol.orto === 'FR'){
+    if (!state.rear){ const rm = rotModel(state.model); state.rear = { m:rm, edges:solve(rm).edges }; }
+    pics.push({ m:state.rear.m, edges:state.rear.edges, cap:'Vista de trás (peça girada 180°)', labels:['LD','P','S'], text:'lateral dir., posterior e superior' });
+  }
+  if (!state.persp) state.persp = pics.map(pc => isoPicture(pc.m, pc.edges, Wv - 30, pics.length > 1 ? 165 : 240));
+  pics.forEach((pc, i) => {
+    const pic = state.persp[i];
+    const t = el('text', { x:0, y:y + 14, class:'vlab' }, svg); t.textContent = pc.cap; y += 24;
+    const g = el('g', { transform:`translate(${((Wv - pic.w) / 2).toFixed(1)},${y})` }, svg);
+    el('image', { href:pic.href, x:0, y:0, width:pic.w, height:pic.h, preserveAspectRatio:'none' }, g);
+    if (state.faceGrid) pic.grid.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-grid' }, g));
+    pic.lines.forEach(([x1, y1, x2, y2]) => el('line', { x1, y1, x2, y2, class:'persp-edge' }, g));
+    y += pic.h + 46;
+    miniCube(svg, 0, y - 6, pc.labels, 'Faces: ' + pc.text);
+    y += 14;
+  });
+  svg.setAttribute('viewBox', `0 0 ${Wv} ${y}`);
+  $('#viewsNote').textContent = state.sol.orto === 'FR'
+    ? 'Esta peça tem detalhes que só aparecem olhando por trás; por isso é mostrada também a vista de trás. '
+    : '';
+  $('#viewsNote').textContent += state.faceGrid
+    ? 'Cada quadrinho da malha nas faces vale 1 módulo, a mesma medida de um quadrado da malha das vistas. Faces inclinadas não têm malha: meça-as pelas arestas das faces vizinhas.'
+    : 'Desenhe as vistas no 1º diedro: frontal, lateral esquerda à direita dela e superior abaixo dela.';
+}
+
+/* ---------- troca de modo ---------- */
+state.faceGrid = true;
+try { if (localStorage.getItem('iso-malha-faces') === '0') state.faceGrid = false; } catch (e) {}
+$('#gridBtn').onclick = () => {
+  state.faceGrid = !state.faceGrid;
+  try { localStorage.setItem('iso-malha-faces', state.faceGrid ? '1' : '0'); } catch (e) {}
+  $('#gridBtn').setAttribute('aria-pressed', state.faceGrid); renderLeft();
+};
+function applyModeUI(){
+  const o = state.mode === 'orto';
+  $('#gridBtn').hidden = !o; $('#gridBtn').setAttribute('aria-pressed', state.faceGrid);
+  $('#modeIso').setAttribute('aria-selected', !o); $('#modeOrto').setAttribute('aria-selected', o);
+  $('#iso').toggleAttribute('hidden', o); $('#orto').toggleAttribute('hidden', !o);
+  $('#toolHidden').hidden = !o;
+  $('#toolLineLab').textContent = o ? 'Contínua' : 'Linha';
+  $('#helpIso').hidden = o; $('#helpOrto').hidden = !o;
+  $('#instrText').textContent = o
+    ? 'Observe a perspectiva isométrica da peça e desenhe as vistas frontal, lateral esquerda e superior nos quadros da malha, no 1º diedro. Ao terminar, solicite a avaliação automática.'
+    : 'Leia as vistas ortográficas e construa a perspectiva isométrica da peça sobre a malha. Ao terminar, solicite a avaliação automática.';
+  $('#board').setAttribute('aria-label', o ? 'Malha quadriculada para as vistas' : 'Malha isométrica');
+  $('#cbMode').textContent = o ? 'Vistas ortográficas' : 'Perspectiva isométrica';
+}
+function setMode(md){
+  if (md === state.mode && modeApplied) return;
+  saveDrawing();
+  state.mode = md;
+  if (md !== 'orto' && state.tool === 'hidden') state.tool = 'line';
+  applyModeUI();
+  const h = md === 'orto' ? '#vistas' : '#perspectiva';
+  if (location.hash !== h) location.hash = h;
+  if (md === 'orto' && state.sol && state.sol.orto === 'X'){
+    const j = nextAvailable(Math.max(0, state.idx), 1);
+    toast(`${state.ex.nome}: as vistas não podem ser deduzidas só pela perspectiva. Aberta a próxima peça disponível.`);
+    if (j >= 0){ loadExercise(EXERCISES[j], j, 1, 1); return; }
+  }
+  restoreDrawing(md);
+  renderLeft(); renderAll(); renderResults(); renderProgress(); refreshExMeta();
+}
+function classifyAll(){
+  const todo = EXERCISES.filter(e => !(e.id in ORTO)); let i = 0;
+  const step = () => {
+    const t0 = performance.now();
+    while (i < todo.length && performance.now() - t0 < 40){ const e = todo[i++]; try { ORTO[e.id] = solve(buildModel(e)).orto; } catch (err){ ORTO[e.id] = 'F'; } }
+    if (i < todo.length) setTimeout(step, 20); else renderProgress();
+  };
+  setTimeout(step, 400);
+}
+
+/* ---------- avaliação das vistas ---------- */
+function oEvaluate(){
+  if (!$('#stuName').value.trim()){ toast('Digite seu nome no painel Progresso para registrar a avaliação.'); $('#stuName').focus(); return; }
+  if (!state.segs.length){ toast('Desenhe as vistas antes de pedir a avaliação.'); return; }
+  state.start = null;
+  const SV = {}, SH = {}, stud = {};
+  for (const k of VIEWS){ SV[k] = new Set(state.sol.views[k].vis); SH[k] = new Set(state.sol.views[k].hid); stud[k] = new Map(); }
+  let outside = 0;
+  for (const sg of state.segs){
+    const ra = oRegion(sg.a), rb = oRegion(sg.b);
+    if (!ra || ra !== rb){ outside++; continue; }
+    const p = toLocal(ra, sg.a), q = toLocal(ra, sg.b);
+    const da = q[0] - p[0], db = q[1] - p[1]; const n = unitCount(da, db, false); if (!n) continue;
+    const st = [da / n, db / n], t = sg.t === 'hid' ? 'hid' : 'vis';
+    for (let i = 0; i < n; i++){
+      const a = [p[0] + st[0] * i, p[1] + st[1] * i]; const key = ek(a, [a[0] + st[0], a[1] + st[1]]);
+      const prev = stud[ra].get(key); stud[ra].set(key, prev && prev !== t ? 'vis' : t);
+    }
+  }
+  const per = {}, items = [];
+  let sv = 0, sh = 0, okV = 0, okH = 0, wrong = 0, extra = 0, nStud = 0;
+  for (const k of VIEWS){
+    const v = { sv:SV[k].size, sh:SH[k].size, okV:0, okH:0, wrong:0, extra:0, n:stud[k].size, missV:0, missH:0 };
+    for (const [key, t] of stud[k]){
+      const inV = SV[k].has(key), inH = SH[k].has(key); let cls;
+      if (t === 'vis' && inV){ v.okV++; cls = 'ov-ok'; }
+      else if (t === 'hid' && inH){ v.okH++; cls = 'ov-ok hid'; }
+      else if (inV || inH){ v.wrong++; cls = 'ov-shift' + (t === 'hid' ? ' hid' : ''); }
+      else { v.extra++; cls = 'ov-bad' + (t === 'hid' ? ' hid' : ''); }
+      items.push([k, key, cls]);
+    }
+    for (const key of SV[k]) if (!stud[k].has(key)){ v.missV++; items.unshift([k, key, 'ov-miss']); }
+    for (const key of SH[k]) if (!stud[k].has(key)){ v.missH++; items.unshift([k, key, 'ov-miss hid']); }
+    per[k] = v; sv += v.sv; sh += v.sh; okV += v.okV; okH += v.okH; wrong += v.wrong; extra += v.extra; nStud += v.n;
+  }
+  // extensão de cada vista desenhada (para a correspondência entre vistas)
+  const ext = {};
+  for (const k of VIEWS){
+    if (!stud[k].size){ ext[k] = null; continue; }
+    let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+    for (const key of stud[k].keys()){ const [a,b,c,d] = pe(key); a0 = Math.min(a0, a, c); a1 = Math.max(a1, a, c); b0 = Math.min(b0, b, d); b1 = Math.max(b1, b, d); }
+    ext[k] = { w:a1 - a0, h:b1 - b0 };
+  }
+  const checks = [['front','w','top','w','largura','frontal','superior'], ['front','h','left','h','altura','frontal','lateral esquerda'], ['top','h','left','w','profundidade','superior','lateral esquerda']];
+  const corrFails = []; let corrOk = 0;
+  for (const [k1, d1, k2, d2, nome, n1, n2] of checks){
+    if (ext[k1] && ext[k2] && ext[k1][d1] === ext[k2][d2]) corrOk++;
+    else if (ext[k1] && ext[k2]) corrFails.push(`A ${nome} difere entre as vistas ${n1} (${ext[k1][d1]}) e ${n2} (${ext[k2][d2]}). No 1º diedro essas medidas devem coincidir.`);
+  }
+  const corr = corrOk / 3;
+  // vista desenhada fora do ponto inicial
+  const shifted = [];
+  for (const k of VIEWS){
+    const v = per[k], tot = v.sv + v.sh;
+    if (!v.n || v.okV + v.okH + v.wrong >= tot * 0.5) continue;
+    const all = new Set([...SV[k], ...SH[k]]); let best = 0;
+    for (let da = -OG.R; da <= OG.R; da++) for (let db = -OG.R; db <= OG.R; db++){
+      if (!da && !db) continue; let c = 0;
+      for (const key of stud[k].keys()){ const [a,b,cc,d] = pe(key); if (all.has(ek([a+da, b+db], [cc+da, d+db]))) c++; }
+      if (c > best) best = c;
+    }
+    if (best >= tot * 0.6) shifted.push(k);
+  }
+  const solTot = sv + sh;
+  const coverage = solTot ? (okV + okH + 0.5 * wrong) / solTot : 0;
+  const precision = nStud + outside ? (okV + okH) / (nStud + outside) : 0;
+  const typeAcc = okV + okH + wrong ? (okV + okH) / (okV + okH + wrong) : 0;
+  const visRec = sv ? okV / sv : 1, hidRec = sh ? okH / sh : 1;
+  let score = 100 * (0.45 * coverage + 0.25 * precision + 0.15 * typeAcc + 0.15 * corr);
+  const perfect = okV === sv && okH === sh && !wrong && !extra && !outside;
+  if (perfect) score = 100;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  const fb = []; const pl = (n, s1, s2) => n === 1 ? s1 : s2;
+  if (perfect) fb.push(['good', 'Vistas idênticas ao gabarito: todas as linhas no lugar, com o tipo correto.']);
+  for (const k of VIEWS){
+    const v = per[k];
+    if (!v.n){ fb.push(['bad', `A ${VNAME[k].toLowerCase()} não foi desenhada.`]); continue; }
+    if (shifted.includes(k)){ fb.push(['bad', `A ${VNAME[k].toLowerCase()} parece deslocada: comece pelo ponto vermelho, que marca o canto inferior esquerdo da vista.`]); continue; }
+    const parts = [];
+    if (v.missV) parts.push(`faltam ${v.missV} ${pl(v.missV, 'módulo', 'módulos')} de linha contínua`);
+    if (v.missH) parts.push(`faltam ${v.missH} ${pl(v.missH, 'módulo', 'módulos')} de linha tracejada`);
+    if (v.wrong) parts.push(`${v.wrong} ${pl(v.wrong, 'módulo está', 'módulos estão')} com o tipo de linha trocado`);
+    if (v.extra) parts.push(`${v.extra} ${pl(v.extra, 'módulo não pertence', 'módulos não pertencem')} à vista`);
+    if (parts.length) fb.push([v.missV || v.extra ? 'bad' : 'warn', `${VNAME[k]}: ${parts.join('; ')}.`]);
+  }
+  if (outside) fb.push(['bad', `${outside} ${pl(outside, 'linha está', 'linhas estão')} fora dos quadros ou ${pl(outside, 'atravessa', 'atravessam')} de um quadro para outro.`]);
+  if (sh && !okH && ![...VIEWS].some(k => [...stud[k].values()].includes('hid'))) fb.push(['warn', 'Esta peça tem arestas invisíveis. Use a ferramenta Tracejada para representá-las.']);
+  corrFails.forEach(t => fb.push(['warn', t]));
+  if (!perfect && coverage >= 0.9 && precision >= 0.9) fb.push(['good', 'Muito perto: faltam apenas detalhes.']);
+
+  state.result = { mode:'orto', score, visRec, hidRec, typeAcc, precision, corr, per, sv, sh, fb, items, perfect, cArr:[visRec, hidRec, typeAcc, precision, corr] };
+  state.stale = false;
+  recordAttempt(state.result);
+  renderProgress(); refreshExMeta();
+  oRenderPreview(); oRenderOverlay(); oRenderResults(); updateStatus();
+  if (window.matchMedia('(max-width: 1240px)').matches) $('#results').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function oRenderResults(){
+  const box = $('#results'); const r = state.result;
+  if (!r || r.mode !== 'orto'){
+    box.innerHTML = `<h2>Avaliação</h2><p class="empty">Desenhe as três vistas nos quadros da malha e clique em <b>Avaliar desenho</b>. A avaliação confere as linhas visíveis e ocultas, o tipo de linha, as linhas a mais, a posição de cada vista e a correspondência de medidas entre as vistas.</p>`;
+    return;
+  }
+  const [g, col] = gradeOf(r.score);
+  const circ = 2 * Math.PI * 38, off = circ * (1 - r.score / 100);
+  const pct = v => Math.round(v * 100);
+  const row = (lab, v) => `<span>${lab}</span><span class="bar"><i style="width:${pct(v)}%"></i></span><span class="pct">${pct(v)}%</span>`;
+  const vrow = k => { const v = r.per[k]; return `<tr><td>${VNAME[k]}</td><td>${v.okV}/${v.sv}${v.sh ? ` + ${v.okH}/${v.sh} tracej.` : ''}</td></tr>`; };
+  box.innerHTML = `
+    <h2>Avaliação</h2>
+    ${state.stale ? '<div class="stale">O desenho mudou depois da avaliação. Clique em Avaliar desenho para atualizar.</div>' : ''}
+    <div class="scorebox">
+      <svg class="ring" viewBox="0 0 92 92" role="img" aria-label="Nota ${r.score} de 100">
+        <circle class="bg" cx="46" cy="46" r="38" fill="none" stroke-width="8"/>
+        <circle class="fg" cx="46" cy="46" r="38" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 46 46)"/>
+        <text x="46" y="47">${r.score}</text>
+      </svg>
+      <div><div class="grade" style="color:${col}">${g}</div><div class="grade-sub">Vistas ortográficas</div></div>
+    </div>
+    <h3>Critérios</h3>
+    <div class="crit">${row('Linhas visíveis', r.visRec)}${r.sh ? row('Linhas ocultas', r.hidRec) : ''}${row('Tipo de linha', r.typeAcc)}${row('Sem linhas a mais', r.precision)}${row('Correspondência', r.corr)}</div>
+    <h3>Módulos corretos por vista</h3>
+    <table class="axes"><tbody>${VIEWS.map(vrow).join('')}</tbody></table>
+    <h3>Observações</h3>
+    <ul class="fb">${r.fb.map(([c, t]) => `<li class="${c}">${t}</li>`).join('') || '<li>Sem observações.</li>'}</ul>
+    <div class="keyrow">
+      <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--ok)" stroke-width="3"/></svg>correta</span>
+      <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--bad)" stroke-width="3"/></svg>a mais</span>
+      <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--shift)" stroke-width="3"/></svg>tipo trocado</span>
+      <span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--warn)" stroke-width="2.4" stroke-dasharray="5 4"/></svg>faltante</span>
+      ${r.sh ? '<span><svg viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="var(--warn)" stroke-width="2.6" stroke-dasharray="1.5 4"/></svg>tracejada faltante</span>' : ''}
     </div>`;
 }
 
@@ -1120,44 +1631,55 @@ function ensureJsPdf(){
     sc.onload = fin; sc.onerror = fin; document.head.appendChild(sc); setTimeout(fin, 8000);
   });
 }
+const modesOf = st => ['iso', 'orto'].filter(md => st.history.some(h => modeOf(h) === md));
 function csvText(st){
-  const sm = summary(st); const q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const lines = [['Aluno', st.name], ['Emitido em', fmtDate(Date.now())], ['Nota geral', sm.overall], ['Média dos realizados', sm.done ? sm.avgDone : ''], ['Exercícios realizados', `${sm.done} de ${EXERCISES.length}`], [],
-    ['Nº', 'Exercício', 'Grupo', 'Nível', 'Tentativas', 'Melhor nota', 'Última nota', 'Conceito']];
-  sm.rows.forEach(r => lines.push([r.n, r.ex.nome, r.ex.grupo, r.ex.nivel, r.attempts, r.best ?? '', r.last ?? '', r.best != null ? gradeOf(r.best)[0] : 'Não realizado']));
-  lines.push([], ['Data e hora', 'Exercício', 'Nota', 'Arestas', 'Sem linhas a mais', 'Vértices', 'Ponto inicial', 'Conexões']);
-  st.history.forEach(h => lines.push([fmtDate(h.ts), h.nome, h.score, ...h.c.map(v => Math.round(v * 100) + '%')]));
+  const q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [['Aluno', st.name], ['Emitido em', fmtDate(Date.now())]];
+  for (const md of modesOf(st)){
+    const sm = summary(st, md);
+    lines.push([], [MODE_TITLE[md]], ['Nota geral', sm.overall], ['Média dos realizados', sm.done ? sm.avgDone : ''], ['Exercícios realizados', `${sm.done} de ${sm.total}`], [],
+      ['Nº', 'Exercício', 'Grupo', 'Nível', 'Tentativas', 'Melhor nota', 'Última nota', 'Conceito']);
+    sm.rows.forEach(r => lines.push([r.n, r.ex.nome, r.ex.grupo, r.ex.nivel, r.attempts, r.best ?? '', r.last ?? '', r.best != null ? gradeOf(r.best)[0] : 'Não realizado']));
+  }
+  lines.push([], ['Histórico de tentativas'], ['Data e hora', 'Modo', 'Exercício', 'Nota', 'Critério 1', 'Critério 2', 'Critério 3', 'Critério 4', 'Critério 5']);
+  st.history.forEach(h => lines.push([fmtDate(h.ts), modeOf(h) === 'orto' ? 'Modo 2' : 'Modo 1', h.nome, h.score, ...h.c.map(v => Math.round(v * 100) + '%')]));
+  lines.push([], ['Critérios do modo 1', ...CRIT_LABELS.iso], ['Critérios do modo 2', ...CRIT_LABELS.orto]);
   return lines.map(l => l.map(q).join(';')).join('\r\n');
 }
 function reportHtml(st){
-  const sm = summary(st); const [g, col] = gradeOf(sm.overall);
-  const bw = 600 / sm.rows.length;
-  const bars = sm.rows.map((r, i) => {
-    const x = 30 + i * bw + bw * 0.18, w = bw * 0.64;
-    const h = r.best != null ? Math.max(1, r.best * 1.3) : 0;
-    return (r.best != null ? `<rect x="${x}" y="${150 - h}" width="${w}" height="${h}" fill="${gradeOf(r.best)[1]}"/>${sm.rows.length <= 30 ? `<text x="${x + w/2}" y="${146 - h}" text-anchor="middle" class="rb-v">${r.best}</text>` : ''}` : '')
-      + (sm.rows.length <= 30 || r.n === 1 || r.n % 5 === 0 ? `<text x="${x + w/2}" y="164" text-anchor="middle" class="rb-l">${r.n}</text>` : '');
-  }).join('');
-  const grid = [0, 60, 80, 100].map(v => `<line x1="30" x2="630" y1="${150 - v*1.3}" y2="${150 - v*1.3}" class="${v === 60 || v === 80 ? 'tr-ref' : 'tr-grid'}"/><text x="25" y="${154 - v*1.3}" text-anchor="end" class="rb-l">${v}</text>`).join('');
-  return `
-    <p class="rep-k" style="margin:0 0 10px">Desenho Técnico, Agronomia, UFT, Câmpus Universitário de Gurupi. Professor responsável: Jacinto Pereira Santos.</p>
-    <div class="rep-top"><div><div class="rep-k">Aluno(a)</div><div class="rep-name">${esc(st.name)}</div></div><div class="rep-k">Emitido em ${fmtDate(Date.now())}</div></div>
+  const sections = modesOf(st).map(md => {
+    const sm = summary(st, md); const [g, col] = gradeOf(sm.overall);
+    const bw = 600 / Math.max(1, sm.rows.length); const many = sm.rows.length > 30;
+    const bars = sm.rows.map((r, i) => {
+      const x = 30 + i * bw + bw * 0.18, w = bw * 0.64;
+      const h = r.best != null ? Math.max(1, r.best * 1.3) : 0;
+      return (r.best != null ? `<rect x="${x}" y="${150 - h}" width="${w}" height="${h}" fill="${gradeOf(r.best)[1]}"/>${!many ? `<text x="${x + w/2}" y="${146 - h}" text-anchor="middle" class="rb-v">${r.best}</text>` : ''}` : '')
+        + (!many || i === 0 || (i + 1) % 5 === 0 ? `<text x="${x + w/2}" y="164" text-anchor="middle" class="rb-l">${r.n}</text>` : '');
+    }).join('');
+    const grid = [0, 60, 80, 100].map(v => `<line x1="30" x2="630" y1="${150 - v*1.3}" y2="${150 - v*1.3}" class="${v === 60 || v === 80 ? 'tr-ref' : 'tr-grid'}"/><text x="25" y="${154 - v*1.3}" text-anchor="end" class="rb-l">${v}</text>`).join('');
+    return `
+    <h2 style="font:600 20px 'Barlow Condensed',sans-serif;margin:22px 0 4px;color:var(--accent)">${MODE_TITLE[md].replace(' - ', ': ')}</h2>
     <div class="rep-sum">
       <div><b style="color:${col}">${sm.overall}</b><span>nota geral, ${g.toLowerCase()}</span></div>
-      <div><b>${sm.done}/${EXERCISES.length}</b><span>exercícios realizados</span></div>
+      <div><b>${sm.done}/${sm.total}</b><span>exercícios realizados</span></div>
       <div><b>${sm.done ? sm.avgDone : '—'}</b><span>média dos realizados</span></div>
       <div><b>${sm.attempts}</b><span>tentativas avaliadas</span></div>
     </div>
-    <p class="note">A nota geral é a média das melhores notas em todos os exercícios; os não realizados contam como zero.</p>
     <h3>Melhor nota por exercício</h3>
     <svg viewBox="0 0 640 170" class="rep-chart" role="img" aria-label="Melhor nota por exercício">${grid}${bars}</svg>
     <h3>Exercícios</h3>
     <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Nº</th><th>Exercício</th><th>Nível</th><th>Tentativas</th><th>Melhor</th><th>Última</th><th>Conceito</th></tr></thead><tbody>
     ${sm.rows.map(r => `<tr><td>${r.n}</td><td>${esc(r.ex.nome)}</td><td>${r.ex.nivel}</td><td>${r.attempts}</td><td>${r.best ?? '—'}</td><td>${r.last ?? '—'}</td><td style="color:${r.best != null ? gradeOf(r.best)[1] : 'var(--muted)'}">${r.best != null ? gradeOf(r.best)[0] : 'Não realizado'}</td></tr>`).join('')}
-    </tbody></table></div>
+    </tbody></table></div>`;
+  }).join('');
+  return `
+    <p class="rep-k" style="margin:0 0 10px">Desenho Técnico, Agronomia, UFT, Câmpus Universitário de Gurupi. Professor responsável: Jacinto Pereira Santos.</p>
+    <div class="rep-top"><div><div class="rep-k">Aluno(a)</div><div class="rep-name">${esc(st.name)}</div></div><div class="rep-k">Emitido em ${fmtDate(Date.now())}</div></div>
+    <p class="note">Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis; os não realizados contam como zero.</p>
+    ${sections}
     <h3>Histórico de tentativas</h3>
-    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Data e hora</th><th>Exercício</th><th>Nota</th></tr></thead><tbody>
-    ${st.history.map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${esc(h.nome)}</td><td style="color:${gradeOf(h.score)[1]};font-weight:600">${h.score}</td></tr>`).join('')}
+    <div class="rep-scroll"><table class="rep-t"><thead><tr><th>Data e hora</th><th>Modo</th><th>Exercício</th><th>Nota</th></tr></thead><tbody>
+    ${st.history.map(h => `<tr><td>${fmtDate(h.ts)}</td><td>${modeOf(h) === 'orto' ? '2' : '1'}</td><td>${esc(h.nome)}</td><td style="color:${gradeOf(h.score)[1]};font-weight:600">${h.score}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
 function openReport(){
@@ -1179,79 +1701,85 @@ async function copyCsv(){
 function buildPdf(st){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
-  const sm = summary(st); const W = 210, M = 16;
+  const W = 210, M = 16;
   let y = M;
   const txt = (s, x, yy, o) => doc.text(latin(s), x, yy, o);
   const ensure = h => { if (y + h > 297 - M){ doc.addPage(); y = M; } };
   doc.setFillColor(28,78,128); doc.rect(0, 0, W, 4, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(35,41,47);
-  txt('Relatório de desempenho - Perspectiva isométrica', M, y + 6); y += 13;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(35,41,47);
+  txt('Relatório de desempenho - Perspectiva isométrica e vistas ortográficas', M, y + 6); y += 13;
   doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(95,106,114);
   txt('Desenho Técnico - Agronomia - Universidade Federal do Tocantins (UFT), Câmpus Universitário de Gurupi', M, y); y += 5;
   txt('Professor responsável: Jacinto Pereira Santos', M, y); y += 9;
   doc.setTextColor(35,41,47); doc.setFontSize(11);
   doc.setFont('helvetica','bold'); txt('Aluno(a):', M, y); doc.setFont('helvetica','normal'); txt(st.name, M + 20, y);
   doc.setFont('helvetica','bold'); txt('Emitido em:', 120, y); doc.setFont('helvetica','normal'); txt(fmtDate(Date.now()), 143, y); y += 8;
+  doc.setFontSize(8.5); doc.setTextColor(95,106,114);
+  txt('Em cada modo, a nota geral é a média das melhores notas em todos os exercícios disponíveis; os não realizados contam como zero.', M, y); y += 7;
 
-  // quadro-resumo
-  const [gName] = gradeOf(sm.overall); const gc = GRC(sm.overall);
-  doc.setDrawColor(201,209,207); doc.setLineWidth(0.3); doc.roundedRect(M, y, W - 2*M, 30, 2, 2);
-  doc.setFont('helvetica','bold'); doc.setFontSize(28); doc.setTextColor(...gc); txt(String(sm.overall), M + 8, y + 17);
-  doc.setFontSize(11); txt(gName, M + 8, y + 25);
-  doc.setFontSize(9); doc.setTextColor(95,106,114); doc.setFont('helvetica','normal'); txt('Nota geral (0 a 100)', M + 32, y + 9);
-  const stats = [['Exercícios realizados', `${sm.done} de ${EXERCISES.length}`], ['Média dos realizados', sm.done ? String(sm.avgDone) : '-'], ['Com nota 60 ou mais', String(sm.passed)], ['Tentativas avaliadas', String(sm.attempts)]];
-  stats.forEach(([k, v], i) => { const x = M + 72 + (i % 2) * 52, yy = y + 10 + Math.floor(i / 2) * 11; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt(k, x, yy); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(35,41,47); txt(v, x, yy + 5); });
-  y += 36;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114);
-  txt('A nota geral é a média das melhores notas em todos os exercícios da lista; exercícios não realizados contam como zero.', M, y); y += 8;
+  modesOf(st).forEach((md, mi) => {
+    const sm = summary(st, md);
+    if (mi > 0){ doc.addPage(); y = M; }
+    doc.setFillColor(221,232,242); doc.rect(M, y - 5, W - 2*M, 8, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(12.5); doc.setTextColor(28,78,128); txt(MODE_TITLE[md], M + 2, y + 0.5); y += 9;
 
-  // gráfico
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Melhor nota por exercício', M, y); y += 4;
-  const gx = M + 8, gw = W - 2*M - 8, gh = 44, gy = y + 2;
-  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  for (const v of [0, 60, 80, 100]){ const yy = gy + gh - v / 100 * gh; doc.setDrawColor(v === 60 || v === 80 ? 180 : 215, 200, 200); doc.setLineDashPattern(v === 60 || v === 80 ? [1,1] : [], 0); doc.line(gx, yy, gx + gw, yy); doc.setTextColor(95,106,114); txt(String(v), gx - 2, yy + 1, { align:'right' }); }
-  doc.setLineDashPattern([], 0);
-  const bw = gw / sm.rows.length;
-  sm.rows.forEach((r, i) => {
-    const x = gx + i * bw + bw * 0.18, w = bw * 0.64;
-    if (r.best != null){ const h = Math.max(0.6, r.best / 100 * gh); doc.setFillColor(...GRC(r.best)); doc.rect(x, gy + gh - h, w, h, 'F'); if (sm.rows.length <= 30){ doc.setTextColor(35,41,47); txt(String(r.best), x + w/2, gy + gh - h - 1.2, { align:'center' }); } }
-    if (sm.rows.length <= 30 || r.n === 1 || r.n % 5 === 0){ doc.setTextColor(95,106,114); txt(String(r.n), x + w/2, gy + gh + 4, { align:'center' }); }
-  });
-  y = gy + gh + 11;
+    // quadro-resumo
+    const [gName] = gradeOf(sm.overall); const gc = GRC(sm.overall);
+    doc.setDrawColor(201,209,207); doc.setLineWidth(0.3); doc.roundedRect(M, y, W - 2*M, 30, 2, 2);
+    doc.setFont('helvetica','bold'); doc.setFontSize(28); doc.setTextColor(...gc); txt(String(sm.overall), M + 8, y + 17);
+    doc.setFontSize(11); txt(gName, M + 8, y + 25);
+    doc.setFontSize(9); doc.setTextColor(95,106,114); doc.setFont('helvetica','normal'); txt('Nota geral (0 a 100)', M + 32, y + 9);
+    const stats = [['Exercícios realizados', `${sm.done} de ${sm.total}`], ['Média dos realizados', sm.done ? String(sm.avgDone) : '-'], ['Com nota 60 ou mais', String(sm.passed)], ['Tentativas avaliadas', String(sm.attempts)]];
+    stats.forEach(([k, v], i) => { const x = M + 72 + (i % 2) * 52, yy = y + 10 + Math.floor(i / 2) * 11; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt(k, x, yy); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(35,41,47); txt(v, x, yy + 5); });
+    y += 38;
 
-  // tabela
-  ensure(20);
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Exercícios', M, y); y += 5;
-  const cols = [[M, 'Nº'], [M + 9, 'Exercício'], [M + 82, 'Nível'], [M + 104, 'Tentativas'], [M + 126, 'Melhor'], [M + 144, 'Última'], [M + 160, 'Conceito']];
-  const header = () => { doc.setFillColor(221,232,242); doc.rect(M, y - 4, W - 2*M, 6, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,41,47); cols.forEach(([x, t]) => txt(t, x + 1, y)); y += 6; };
-  header();
-  doc.setFont('helvetica','normal');
-  let lastGroup = '';
-  sm.rows.forEach(r => {
-    if (y + 6 > 297 - M){ doc.addPage(); y = M + 4; header(); doc.setFont('helvetica','normal'); }
-    if (r.ex.grupo !== lastGroup){ lastGroup = r.ex.grupo; doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(95,106,114); txt(r.ex.grupo, M + 1, y); y += 5; }
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(35,41,47);
-    txt(String(r.n), M + 1, y); txt(r.ex.nome, M + 10, y); txt(r.ex.nivel, M + 83, y); txt(String(r.attempts), M + 105, y);
-    txt(r.best != null ? String(r.best) : '-', M + 127, y); txt(r.last != null ? String(r.last) : '-', M + 145, y);
-    if (r.best != null){ doc.setTextColor(...GRC(r.best)); txt(gradeOf(r.best)[0], M + 161, y); }
-    else { doc.setTextColor(150,150,150); txt('Não realizado', M + 161, y); }
-    doc.setDrawColor(225,229,228); doc.line(M, y + 1.8, W - M, y + 1.8); y += 5.6;
-  });
-  y += 4;
-
-  // critérios
-  if (sm.critAvg){
-    ensure(40);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Desempenho médio por critério', M, y); y += 3;
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt('Última tentativa de cada exercício realizado', M, y + 3.5); y += 8;
-    ['Arestas da peça desenhadas', 'Ausência de linhas indevidas', 'Vértices corretos', 'Início no ponto indicado', 'Conexões entre arestas'].forEach((lab, i) => {
-      const v = sm.critAvg[i]; doc.setTextColor(35,41,47); txt(lab, M, y);
-      doc.setFillColor(225,229,228); doc.rect(M + 60, y - 2.8, 90, 3.2, 'F'); doc.setFillColor(28,78,128); doc.rect(M + 60, y - 2.8, 90 * v, 3.2, 'F');
-      txt(Math.round(v * 100) + '%', M + 154, y); y += 6;
+    // gráfico
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Melhor nota por exercício', M, y); y += 4;
+    const gx = M + 8, gw = W - 2*M - 8, gh = 40, gy = y + 2;
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    for (const v of [0, 60, 80, 100]){ const yy = gy + gh - v / 100 * gh; doc.setDrawColor(v === 60 || v === 80 ? 180 : 215, 200, 200); doc.setLineDashPattern(v === 60 || v === 80 ? [1,1] : [], 0); doc.line(gx, yy, gx + gw, yy); doc.setTextColor(95,106,114); txt(String(v), gx - 2, yy + 1, { align:'right' }); }
+    doc.setLineDashPattern([], 0);
+    const bw = gw / Math.max(1, sm.rows.length), many = sm.rows.length > 30;
+    sm.rows.forEach((r, i) => {
+      const x = gx + i * bw + bw * 0.18, w = bw * 0.64;
+      if (r.best != null){ const h = Math.max(0.6, r.best / 100 * gh); doc.setFillColor(...GRC(r.best)); doc.rect(x, gy + gh - h, w, h, 'F'); if (!many){ doc.setTextColor(35,41,47); txt(String(r.best), x + w/2, gy + gh - h - 1.2, { align:'center' }); } }
+      if (!many || i === 0 || (i + 1) % 5 === 0){ doc.setTextColor(95,106,114); txt(String(r.n), x + w/2, gy + gh + 4, { align:'center' }); }
     });
-    y += 3;
-  }
-  if (sm.extras.length){ ensure(10); doc.setFontSize(9); doc.setTextColor(35,41,47); txt(`Práticas extras com peças aleatórias: ${sm.extras.length} tentativa(s), média ${Math.round(sm.extras.reduce((s, h) => s + h.score, 0) / sm.extras.length)}.`, M, y); y += 8; }
+    y = gy + gh + 11;
+
+    // tabela
+    ensure(20);
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Exercícios', M, y); y += 5;
+    const cols = [[M, 'Nº'], [M + 9, 'Exercício'], [M + 82, 'Nível'], [M + 104, 'Tentativas'], [M + 126, 'Melhor'], [M + 144, 'Última'], [M + 160, 'Conceito']];
+    const header = () => { doc.setFillColor(221,232,242); doc.rect(M, y - 4, W - 2*M, 6, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(35,41,47); cols.forEach(([x, t]) => txt(t, x + 1, y)); y += 6; };
+    header();
+    let lastGroup = '';
+    sm.rows.forEach(r => {
+      if (y + 6 > 297 - M){ doc.addPage(); y = M + 4; header(); }
+      if (r.ex.grupo !== lastGroup){ lastGroup = r.ex.grupo; doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(95,106,114); txt(r.ex.grupo, M + 1, y); y += 5; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(35,41,47);
+      txt(String(r.n), M + 1, y); txt(r.ex.nome.length > 42 ? r.ex.nome.slice(0, 41) + '…' : r.ex.nome, M + 10, y); txt(r.ex.nivel, M + 83, y); txt(String(r.attempts), M + 105, y);
+      txt(r.best != null ? String(r.best) : '-', M + 127, y); txt(r.last != null ? String(r.last) : '-', M + 145, y);
+      if (r.best != null){ doc.setTextColor(...GRC(r.best)); txt(gradeOf(r.best)[0], M + 161, y); }
+      else { doc.setTextColor(150,150,150); txt('Não realizado', M + 161, y); }
+      doc.setDrawColor(225,229,228); doc.line(M, y + 1.8, W - M, y + 1.8); y += 5.6;
+    });
+    y += 4;
+
+    // critérios
+    if (sm.critAvg){
+      ensure(42);
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(35,41,47); txt('Desempenho médio por critério', M, y); y += 3;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(95,106,114); txt('Última tentativa de cada exercício realizado', M, y + 3.5); y += 8;
+      CRIT_LABELS[md].forEach((lab, i) => {
+        const v = sm.critAvg[i]; doc.setTextColor(35,41,47); txt(lab, M, y);
+        doc.setFillColor(225,229,228); doc.rect(M + 60, y - 2.8, 90, 3.2, 'F'); doc.setFillColor(28,78,128); doc.rect(M + 60, y - 2.8, 90 * v, 3.2, 'F');
+        txt(Math.round(v * 100) + '%', M + 154, y); y += 6;
+      });
+      y += 3;
+    }
+    if (sm.extras.length){ ensure(10); doc.setFontSize(9); doc.setTextColor(35,41,47); txt(`Práticas extras com peças aleatórias: ${sm.extras.length} tentativa(s), média ${Math.round(sm.extras.reduce((s, h) => s + h.score, 0) / sm.extras.length)}.`, M, y); y += 8; }
+  });
 
   // histórico
   ensure(16);
@@ -1260,12 +1788,13 @@ function buildPdf(st){
   st.history.forEach((h, i) => {
     if (y + 5 > 297 - M){ doc.addPage(); y = M; }
     doc.setFont('helvetica','normal'); doc.setTextColor(95,106,114); txt(fmtDate(h.ts), M, y);
-    doc.setTextColor(35,41,47); txt(`${i + 1}. ${h.nome}`, M + 30, y);
+    txt(modeOf(h) === 'orto' ? 'Modo 2' : 'Modo 1', M + 28, y);
+    doc.setTextColor(35,41,47); txt(`${i + 1}. ${h.nome}`, M + 44, y);
     doc.setFont('helvetica','bold'); doc.setTextColor(...GRC(h.score)); txt(String(h.score), W - M, y, { align:'right' });
     y += 4.8;
   });
   const n = doc.getNumberOfPages();
-  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); txt(`${latin(st.name)} - página ${i} de ${n}`, W - M, 290, { align:'right' }); txt('Isométrica - prática de perspectiva', M, 290); }
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); txt(`${latin(st.name)} - página ${i} de ${n}`, W - M, 290, { align:'right' }); txt('Isométrica - perspectiva e vistas ortográficas', M, 290); }
   return doc.output('blob');
 }
 $('#expPdf').onclick = async () => {
@@ -1327,39 +1856,67 @@ function fillSelect(){
   const sel = $('#exSelect'); const st = getStudent(false);
   const groups = [...new Set(EXERCISES.map(e => e.grupo))];
   sel.innerHTML = groups.map(g => `<optgroup label="${esc(g)}">` + EXERCISES.map((e, i) => e.grupo !== g ? '' :
-    `<option value="${i}">${i + 1}. ${esc(e.nome)}${st && st.best[e.id] != null ? ` (${st.best[e.id]})` : ''}</option>`).join('') + '</optgroup>').join('')
+    (state.mode === 'orto' && ORTO[e.id] === 'X'
+      ? `<option value="${i}" disabled>${i + 1}. ${esc(e.nome)} (só no modo 1)</option>`
+      : `<option value="${i}">${i + 1}. ${esc(e.nome)}${bestMap(st, state.mode)[e.id] != null ? ` (${bestMap(st, state.mode)[e.id]})` : ''}</option>`)).join('') + '</optgroup>').join('')
     + (state.ex && String(state.ex.id).startsWith('rnd') ? `<option value="-1">Peça aleatória</option>` : '');
   sel.value = String(state.idx);
 }
 function refreshExMeta(){
   $('#exLevel').textContent = state.ex.nivel;
-  const st = getStudent(false); const b = st && st.best[state.ex.id];
+  const st = getStudent(false); const b = bestMap(st, state.mode)[state.ex.id];
   $('#exBest').textContent = b != null ? b : '—';
   $('#cbTitle').textContent = state.ex.nome;
 }
-function loadExercise(ex, idx){
+function nextAvailable(from, dir){
+  for (let k = 1; k <= EXERCISES.length; k++){
+    const j = ((from + dir * k) % EXERCISES.length + EXERCISES.length) % EXERCISES.length;
+    if (state.mode !== 'orto' || ORTO[EXERCISES[j].id] !== 'X') return j;
+  }
+  return -1;
+}
+function loadExercise(ex, idx, dir, hops){
+  const model = buildModel(ex), sol = solve(model);
+  ORTO[ex.id] = sol.orto;
+  if (state.mode === 'orto' && sol.orto === 'X' && (hops || 0) < EXERCISES.length){
+    if (idx < 0){ return loadExercise(randomExercise(), -1, dir, (hops || 0) + 1); }
+    const j = nextAvailable(idx, dir || 1);
+    if (j >= 0 && j !== idx){
+      if (!hops) toast(`${ex.nome}: as vistas não podem ser deduzidas só pela perspectiva. Aberta a próxima peça disponível.`);
+      return loadExercise(EXERCISES[j], j, dir || 1, (hops || 0) + 1);
+    }
+  }
   state.ex = ex; state.idx = idx;
-  state.model = buildModel(ex);
-  state.sol = solve(state.model);
+  state.model = model;
+  state.sol = sol;
   const m = state.model;
   const uSpan = m.W + m.D, tSpan = m.W + m.D + 2 * m.H;
   S = Math.max(24, Math.min(48, (VW * 0.6) / (uSpan * C), (VH * 0.6) / (tSpan / 2)));
   OX = VW / 2 - ((m.W - m.D) / 2) * C * S;
   OY = VH / 2 + (tSpan / 2) * S / 2;
-  state.segs = []; state.undo = []; state.redo = []; state.start = null; state.hover = null;
-  state.result = null; state.stale = false; state.showSolid = false; state.solidImg = null;
-  renderViews(m, state.sol, ex); refreshExMeta(); renderAll(); renderResults(); renderProgress();
+  oSetup(m);
+  drawings.iso = blankDrawing(); drawings.orto = blankDrawing();
+  restoreDrawing(state.mode);
+  state.showSolid = false; state.solidImg = null; state.rear = null; state.persp = null;
+  renderLeft(); refreshExMeta(); renderAll(); renderResults(); renderProgress();
 }
-$('#exSelect').onchange = e => { const i = +e.target.value; if (i >= 0) loadExercise(EXERCISES[i], i); };
-$('#prevEx').onclick = () => { const i = state.idx <= 0 ? EXERCISES.length - 1 : state.idx - 1; loadExercise(EXERCISES[i], i); };
-$('#nextEx').onclick = () => { const i = state.idx < 0 || state.idx >= EXERCISES.length - 1 ? 0 : state.idx + 1; loadExercise(EXERCISES[i], i); };
+$('#exSelect').onchange = e => { const i = +e.target.value; if (i >= 0) loadExercise(EXERCISES[i], i, 1); };
+$('#prevEx').onclick = () => { const i = state.idx < 0 ? EXERCISES.length - 1 : nextAvailable(state.idx, -1); if (i >= 0) loadExercise(EXERCISES[i], i, -1); };
+$('#nextEx').onclick = () => { const i = state.idx < 0 ? 0 : nextAvailable(state.idx, 1); if (i >= 0) loadExercise(EXERCISES[i], i, 1); };
 $('#randEx').onclick = () => loadExercise(randomExercise(), -1);
 const mq = window.matchMedia('(prefers-color-scheme: dark)');
-if (mq.addEventListener) mq.addEventListener('change', () => { state.solidImg = null; renderSolid(); });
+if (mq.addEventListener) mq.addEventListener('change', () => { state.solidImg = null; state.persp = null; renderSolid(); renderLeft(); });
 
 if (prog.current) $('#stuName').value = prog.current;
 updateExportNote();
-loadExercise(EXERCISES[0], 0);
+state.mode = location.hash === '#vistas' ? 'orto' : 'iso';
+applyModeUI();
+loadExercise(EXERCISES[0], 0, 1);
+modeApplied = true;
+$('#modeIso').onclick = () => setMode('iso');
+$('#modeOrto').onclick = () => setMode('orto');
+window.addEventListener('hashchange', () => setMode(location.hash === '#vistas' ? 'orto' : 'iso'));
+classifyAll();
 })();
 </script>
 </body>
