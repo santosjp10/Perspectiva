@@ -30,7 +30,7 @@
 /* ACESSO AO PAINEL DO PROFESSOR
    Para proteger o painel com login e senha, abra o Painel do professor,
    seção "Acesso", gere a linha de acesso e substitua a linha abaixo por ela. */
-window.ISO_PROFESSOR = null;
+window.ISO_PROFESSOR = { login:"santosjp", salt:"67f1208837cdbaed96a2824a", hash:"391992d5903d24670e72181c35755c3d70b7b966cd821a9ed8c58b86e5a189c4" };
 
 (function(){
 const B=(...a)=>({box:a}), PR=(axis,from,to,poly)=>({prism:{axis,from,to,poly}});
